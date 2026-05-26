@@ -66,9 +66,16 @@ fn eval_expr(
       let path_str = segments.join(".")
       resolve_with_scope(ctx, segments, path_str, scope)
     }
+    StringLiteral(text) => String(text)
+    IntLiteral(value) => Int(value)
     FilterCall(base, name, args) => {
       let value = eval_expr(base, ctx, scope)
-      apply_filter(value, name, args)
+      let arg_values : Array[Value] = []
+      for arg in args {
+        arg_values.push(eval_expr(arg, ctx, scope))
+      } nobreak {
+        apply_filter(value, name, arg_values)
+      }
     }
   }
 }

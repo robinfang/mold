@@ -9,5 +9,7 @@ pub enum Node {
 ///|
 pub enum Expr {
   Path(Array[String])
-  FilterCall(Expr, String, Array[String])
+  StringLiteral(String)
+  IntLiteral(Int)
+  FilterCall(Expr, String, Array[Expr])
 }

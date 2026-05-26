@@ -2,31 +2,15 @@
 fn apply_filter(
   value : Value,
   name : String,
-  args : Array[String],
+  args : Array[Value],
 ) -> Value raise MoldError {
-  let arg_values : Array[Value] = []
-  for arg in args {
-    arg_values.push(arg_to_value(arg))
-  } nobreak {
-    match name {
-      "upper" => filter_upper(value)
-      "lower" => filter_lower(value)
-      "trim" => filter_trim(value)
-      "default" => filter_default(value, arg_values)
-      "join" => filter_join(value, arg_values)
-      _ => raise TypeMismatch(("unknown filter: \{name}", "filter"))
-    }
-  }
-}
-
-///|
-fn arg_to_value(raw : String) -> Value noraise {
-  let s = raw.trim().to_owned()
-  let parts = s.split("\"").collect()
-  if parts.length() > 1 {
-    String(parts[1].to_owned())
-  } else {
-    String(s)
+  match name {
+    "upper" => filter_upper(value)
+    "lower" => filter_lower(value)
+    "trim" => filter_trim(value)
+    "default" => filter_default(value, args)
+    "join" => filter_join(value, args)
+    _ => raise TypeMismatch(("unknown filter: \{name}", "filter"))
   }
 }
 

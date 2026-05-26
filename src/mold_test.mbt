@@ -43,8 +43,11 @@ test "missing variable raises error" {
 test "empty interpolation raises error" {
   let result = try? @mold.render("Hello, {{   }}!", @mold.null())
   match result {
-    Err(@mold.LexerError((msg, _))) =>
+    Err(@mold.LexerError((msg, span))) => {
       assert_true(msg.contains("empty interpolation"))
+      assert_eq(span.line, 1)
+      assert_eq(span.column, 8)
+    }
     Ok(_) => fail("expected empty interpolation error")
     _ => fail("unexpected error variant")
   }
@@ -52,11 +55,28 @@ test "empty interpolation raises error" {
 
 ///|
 test "unclosed interpolation raises error" {
-  let result = try? @mold.render("Hello, {{ name!", @mold.null())
+  let result = try? @mold.render("Hello\n{{ name!", @mold.null())
   match result {
-    Err(@mold.LexerError((msg, _))) =>
+    Err(@mold.LexerError((msg, span))) => {
       assert_true(msg.contains("unclosed interpolation"))
+      assert_eq(span.line, 2)
+      assert_eq(span.column, 1)
+    }
     Ok(_) => fail("expected unclosed interpolation error")
+    _ => fail("unexpected error variant")
+  }
+}
+
+///|
+test "unexpected else carries parser span" {
+  let result = try? @mold.render("{% else %}", @mold.null())
+  match result {
+    Err(@mold.ParserError((msg, span))) => {
+      assert_true(msg.contains("unexpected else"))
+      assert_eq(span.line, 1)
+      assert_eq(span.column, 1)
+    }
+    Ok(_) => fail("expected unexpected else error")
     _ => fail("unexpected error variant")
   }
 }
@@ -203,6 +223,24 @@ test "filter default on null" {
 }
 
 ///|
+test "filter default with int literal" {
+  let output = @mold.render(
+    "{{ count | default(0) }}",
+    @mold.object({ "count": @mold.null() }),
+  )
+  assert_eq(output, "0")
+}
+
+///|
+test "filter default with path arg" {
+  let output = @mold.render(
+    "{{ name | default(fallback) }}",
+    @mold.object({ "name": @mold.null(), "fallback": @mold.string("guest") }),
+  )
+  assert_eq(output, "guest")
+}
+
+///|
 test "filter join" {
   let output = @mold.render(
     "{{ items | join(\", \") }}",
@@ -215,6 +253,22 @@ test "filter join" {
     }),
   )
   assert_eq(output, "a, b, c")
+}
+
+///|
+test "filter join with path arg" {
+  let output = @mold.render(
+    "{{ items | join(separator) }}",
+    @mold.object({
+      "items": @mold.array([
+        @mold.string("a"),
+        @mold.string("b"),
+        @mold.string("c"),
+      ]),
+      "separator": @mold.string(" / "),
+    }),
+  )
+  assert_eq(output, "a / b / c")
 }
 
 ///|
