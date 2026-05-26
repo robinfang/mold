@@ -1,0 +1,7 @@
+import {
+  "robinfang/mold",
+}
+
+options(
+  "is-main": true,
+)
