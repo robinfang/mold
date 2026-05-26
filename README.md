@@ -27,8 +27,14 @@ MoonBit still lacks a focused template engine with clean APIs, solid tests, and 
   - `trim`
   - `default(...)`
   - `join(...)`
+  - `escape`
+- 比较与布尔表达式 / comparison and boolean expressions in `if` and interpolation:
+  - `== != < <= > >=`
+  - `and or not`
+  - parentheses grouping such as `(a or b) and c`
 - 结构化错误类型与源码位置 / structured errors with source spans
 - 预编译模板 / parse once, render many times
+- `Engine::register_filter(...)` 自定义过滤器 / custom filter registration via `Engine::register_filter(...)`
 
 ## 示例 / Example
 
@@ -82,8 +88,15 @@ pub fn Template::source(self : Template) -> String
 
 ```moonbit
 pub fn Engine::new() -> Engine
+pub fn Engine::register_filter(self : Engine, name : String, filter : Filter) -> Unit raise MoldError
 pub fn Engine::parse(self : Engine, source : String) -> Template raise MoldError
 pub fn Engine::render(self : Engine, source : String, ctx : Value) -> String raise MoldError
+```
+
+### 自定义过滤器 / Custom Filters
+
+```moonbit
+pub type Filter = (Value, Array[Value]) -> Value
 ```
 
 ### 运行时值模型 / Runtime Value Model
@@ -124,7 +137,6 @@ Current benchmarks already show that parsing once and rendering many times is si
 - 不支持宏系统 / no macro system
 - 不支持异步模板 / no async templates
 - 不支持自动模板目录扫描 / no automatic template discovery
-- 暂不支持布尔与比较表达式（如 `and`、`or`、`not`、`==`、`!=`）/ boolean and comparison expressions are not implemented yet
 - 暂不支持 `include` / no `include` yet
 
 ## 发布计划 / Publishing Plan
