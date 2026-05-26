@@ -10,6 +10,8 @@ pub struct SourceSpan {
 pub suberror MoldError {
   LexerError((String, SourceSpan))
   ParserError((String, SourceSpan))
+  UnknownFilter(String)
+  DuplicateFilter(String)
   MissingVariable(String)
   TypeMismatch((String, String))
 } derive(Debug, Eq)

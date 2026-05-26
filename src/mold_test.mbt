@@ -1,4 +1,20 @@
 ///|
+fn suffix_filter(value : @mold.Value, args : Array[@mold.Value]) -> @mold.Value {
+  let suffix = if args.length() > 0 {
+    match args[0] {
+      @mold.String(text) => text
+      _ => ""
+    }
+  } else {
+    ""
+  }
+  match value {
+    @mold.String(text) => @mold.string(text + suffix)
+    _ => value
+  }
+}
+
+///|
 test "render plain text" {
   let output = @mold.render("hello, mold", @mold.null())
   assert_eq(output, "hello, mold")
@@ -115,6 +131,95 @@ test "if with interpolation in body" {
     @mold.object({ "flag": @mold.bool(true), "name": @mold.string("MoonBit") }),
   )
   assert_eq(output, "Hello, MoonBit!")
+}
+
+///|
+test "if supports equality comparison" {
+  let output = @mold.render(
+    "{% if user.name == \"Alice\" %}yes{% else %}no{% endif %}",
+    @mold.object({ "user": @mold.object({ "name": @mold.string("Alice") }) }),
+  )
+  assert_eq(output, "yes")
+}
+
+///|
+test "if supports numeric comparison" {
+  let output = @mold.render(
+    "{% if count >= 3 %}yes{% else %}no{% endif %}",
+    @mold.object({ "count": @mold.int(3) }),
+  )
+  assert_eq(output, "yes")
+}
+
+///|
+test "comparison works after filter application" {
+  let output = @mold.render(
+    "{% if name | trim == \"Alice\" %}yes{% else %}no{% endif %}",
+    @mold.object({ "name": @mold.string(" Alice ") }),
+  )
+  assert_eq(output, "yes")
+}
+
+///|
+test "if supports boolean and" {
+  let output = @mold.render(
+    "{% if active and ready %}yes{% else %}no{% endif %}",
+    @mold.object({ "active": @mold.bool(true), "ready": @mold.bool(true) }),
+  )
+  assert_eq(output, "yes")
+}
+
+///|
+test "if supports boolean or" {
+  let output = @mold.render(
+    "{% if active or backup %}yes{% else %}no{% endif %}",
+    @mold.object({ "active": @mold.bool(false), "backup": @mold.bool(true) }),
+  )
+  assert_eq(output, "yes")
+}
+
+///|
+test "if supports boolean not" {
+  let output = @mold.render(
+    "{% if not active %}yes{% else %}no{% endif %}",
+    @mold.object({ "active": @mold.bool(false) }),
+  )
+  assert_eq(output, "yes")
+}
+
+///|
+test "boolean precedence keeps and tighter than or" {
+  let output = @mold.render(
+    "{% if active or backup and ready %}yes{% else %}no{% endif %}",
+    @mold.object({
+      "active": @mold.bool(false),
+      "backup": @mold.bool(true),
+      "ready": @mold.bool(true),
+    }),
+  )
+  assert_eq(output, "yes")
+}
+
+///|
+test "parentheses override boolean precedence" {
+  let output = @mold.render(
+    "{% if (active or backup) and ready %}yes{% else %}no{% endif %}",
+    @mold.object({
+      "active": @mold.bool(false),
+      "backup": @mold.bool(true),
+      "ready": @mold.bool(false),
+    }),
+  )
+  assert_eq(output, "no")
+}
+
+///|
+test "not applies to comparison result" {
+  let output = @mold.render(
+    "{% if not count == 0 %}yes{% else %}no{% endif %}",
+    @mold.object({ "count": @mold.int(1) }),
+  )
+  assert_eq(output, "yes")
 }
 
 ///|
@@ -269,6 +374,88 @@ test "filter join with path arg" {
     }),
   )
   assert_eq(output, "a / b / c")
+}
+
+///|
+test "filter escape html characters" {
+  let output = @mold.render(
+    "{{ text | escape }}",
+    @mold.object({
+      "text": @mold.string("<div class=\"x\">Tom & 'Jerry'</div>"),
+    }),
+  )
+  assert_eq(
+    output, "&lt;div class=&quot;x&quot;&gt;Tom &amp; &#39;Jerry&#39;&lt;/div&gt;",
+  )
+}
+
+///|
+test "filter escape supports scalar values" {
+  let output = @mold.render(
+    "{{ count | escape }}|{{ empty | escape }}",
+    @mold.object({ "count": @mold.int(7), "empty": @mold.null() }),
+  )
+  assert_eq(output, "7|")
+}
+
+///|
+test "filter escape rejects arrays" {
+  let result = try? @mold.render(
+    "{{ items | escape }}",
+    @mold.object({ "items": @mold.array([@mold.string("a")]) }),
+  )
+  match result {
+    Err(@mold.TypeMismatch(_)) => ()
+    Ok(_) => fail("expected type mismatch error")
+    _ => fail("unexpected error variant")
+  }
+}
+
+///|
+test "engine custom filter registration" {
+  let engine = @mold.Engine::new()
+  engine.register_filter("suffix", suffix_filter)
+  let output = engine.render(
+    "{{ name | suffix(suffix) }}",
+    @mold.object({ "name": @mold.string("hello"), "suffix": @mold.string("!") }),
+  )
+  assert_eq(output, "hello!")
+}
+
+///|
+test "cannot override built-in filter" {
+  let engine = @mold.Engine::new()
+  let result = try? engine.register_filter("upper", suffix_filter)
+  match result {
+    Err(@mold.DuplicateFilter(name)) => assert_eq(name, "upper")
+    Ok(_) => fail("expected duplicate filter error")
+    _ => fail("unexpected error variant")
+  }
+}
+
+///|
+test "cannot register duplicate custom filter" {
+  let engine = @mold.Engine::new()
+  engine.register_filter("suffix", suffix_filter)
+  let result = try? engine.register_filter("suffix", suffix_filter)
+  match result {
+    Err(@mold.DuplicateFilter(name)) => assert_eq(name, "suffix")
+    Ok(_) => fail("expected duplicate filter error")
+    _ => fail("unexpected error variant")
+  }
+}
+
+///|
+test "unknown filter raises dedicated error" {
+  let result = try? @mold.render(
+    "{{ name | missing }}",
+    @mold.object({ "name": @mold.string("hello") }),
+  )
+  match result {
+    Err(@mold.UnknownFilter(name)) => assert_eq(name, "missing")
+    Ok(_) => fail("expected unknown filter error")
+    _ => fail("unexpected error variant")
+  }
 }
 
 ///|
