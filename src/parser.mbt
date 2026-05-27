@@ -30,6 +30,15 @@ fn parse_nodes(
   tokens : Array[Token],
   start : Int,
 ) -> (Array[Node], Int) raise MoldError {
+  parse_nodes_internal(tokens, start, false)
+}
+
+///|
+fn parse_nodes_internal(
+  tokens : Array[Token],
+  start : Int,
+  stop_at_closer : Bool,
+) -> (Array[Node], Int) raise MoldError {
   let nodes : Array[Node] = []
   let mut i = start
   while i < tokens.length() {
@@ -88,9 +97,24 @@ fn parse_nodes(
           For(item_name, parse_expr(iterable_raw, block_span), body_nodes),
         )
       }
-      BlockElse(span) => raise ParserError(("unexpected else", span))
-      BlockEndIf(span) => raise ParserError(("unexpected endif", span))
-      BlockEndFor(span) => raise ParserError(("unexpected endfor", span))
+      BlockElse(span) => {
+        if stop_at_closer {
+          break (nodes, i)
+        }
+        raise ParserError(("unexpected else", span))
+      }
+      BlockEndIf(span) => {
+        if stop_at_closer {
+          break (nodes, i)
+        }
+        raise ParserError(("unexpected endif", span))
+      }
+      BlockEndFor(span) => {
+        if stop_at_closer {
+          break (nodes, i)
+        }
+        raise ParserError(("unexpected endfor", span))
+      }
       BlockInclude(name, _) => {
         nodes.push(Include(name))
         i = i + 1
@@ -106,31 +130,7 @@ fn parse_nodes_until(
   tokens : Array[Token],
   start : Int,
 ) -> (Array[Node], Int) raise MoldError {
-  let nodes : Array[Node] = []
-  let mut i = start
-  while i < tokens.length() {
-    match tokens[i] {
-      Text(text, _) => {
-        nodes.push(Text(text))
-        i = i + 1
-      }
-      Interpolation(expr, span) => {
-        nodes.push(Interpolation(parse_expr(expr, span)))
-        i = i + 1
-      }
-      BlockElse(_) => break (nodes, i)
-      BlockEndIf(_) => break (nodes, i)
-      BlockEndFor(_) => break (nodes, i)
-      BlockIf(_, _) => break (nodes, i)
-      BlockFor(_, _, _) => break (nodes, i)
-      BlockInclude(name, _) => {
-        nodes.push(Include(name))
-        i = i + 1
-      }
-    }
-  } nobreak {
-    (nodes, i)
-  }
+  parse_nodes_internal(tokens, start, true)
 }
 
 ///|

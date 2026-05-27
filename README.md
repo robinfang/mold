@@ -4,10 +4,22 @@
 
 `mold` is a lightweight template engine for the MoonBit ecosystem.
 
-## 仓库链接 / Repository Links
+## 总体概况 / Overview
 
-- GitHub: <https://github.com/robinfang/mold>
-- GitLink: <https://www.gitlink.org.cn/robinfang/mold>
+`mold` 当前聚焦在一个明确范围内：把模板稳定解析成 AST，再基于统一的 `Value` 模型完成渲染。它优先服务于报告生成、邮件模板、配置文件生成、文档模板这类文本生成场景，同时也支持通过显式配置进入 HTML 输出场景。
+
+`mold` currently focuses on a clear scope: parse templates into ASTs and render them against a unified `Value` model. It primarily targets text generation scenarios such as reports, email templates, config files, and document generation, while also supporting HTML output through explicit configuration.
+
+## 阅读框架 / Reading Guide
+
+第一次接触 `mold` 时，建议按下面顺序阅读：
+
+1. 先看本页，了解项目定位、安装方式和三种推荐使用路径。
+2. 再看 [`docs/getting-started.md`](docs/getting-started.md)，把最小示例和运行方式跑通。
+3. 需要写模板时，看 [`docs/template-syntax.md`](docs/template-syntax.md)。
+4. 需要多模板组合、HTML 输出或错误排查时，看对应进阶文档和 examples。
+
+When reading `mold` for the first time, start with this page for project scope, installation, and the three recommended workflows, then move to `getting-started`, and finally to `template-syntax` when you begin writing templates.
 
 ## 安装 / Installation
 
@@ -15,13 +27,7 @@
 moon add robinfang/mold
 ```
 
-## 项目简介 / Overview
-
-MoonBit 生态目前缺少一个边界清晰、API 干净、可测试可复用的模板引擎。`mold` 的目标是填补这个空白，提供从模板解析、抽象语法树构建、上下文求值到最终渲染输出的完整链路。
-
-MoonBit still lacks a focused template engine with clean APIs, solid tests, and a reusable runtime model. `mold` aims to fill that gap with a complete pipeline from template parsing and AST construction to context evaluation and final rendering.
-
-## 快速开始 / Quick Start
+## 30 秒上手 / 30-Second Quick Start
 
 ```moonbit
 let output = @mold.render(
@@ -30,228 +36,132 @@ let output = @mold.render(
 )
 ```
 
-## 当前能力 / Current Features
+## 推荐使用路径 / Recommended Workflows
+
+这三条路径对应 `mold` 的总体框架：
+
+- 顶层函数：更轻，适合快速渲染
+- `Template`：更稳，适合 parse once, render many
+- `Engine`：更可扩展，适合 include、autoescape、自定义 filter
+
+These three workflows map directly to the overall structure of `mold`: top-level rendering for quick use, `Template` for repeated rendering, and `Engine` for extensibility.
+
+- 小模板或一次性渲染：`@mold.render(...)`
+- 重复渲染同一模板：`Template::parse(...).render(...)`
+- 需要 include、autoescape 或自定义 filter：`Engine`
+
+- Use `@mold.render(...)` for small templates or one-off rendering.
+- Use `Template::parse(...).render(...)` when the same template is rendered repeatedly.
+- Use `Engine` when you need include, autoescape, or custom filters.
+
+## 文档导航 / Documentation
+
+- 文档首页 / Docs index: [`docs/index.md`](docs/index.md)
+- 快速开始 / Getting started: [`docs/getting-started.md`](docs/getting-started.md)
+- 模板语法 / Template syntax: [`docs/template-syntax.md`](docs/template-syntax.md)
+- Engine 指南 / Engine guide: [`docs/engine-guide.md`](docs/engine-guide.md)
+- HTML 安全 / HTML safety: [`docs/html-safety.md`](docs/html-safety.md)
+- 错误排查 / Errors: [`docs/errors.md`](docs/errors.md)
+- Recipes / Recipes:
+  - [`docs/recipes/report-generation.md`](docs/recipes/report-generation.md)
+  - [`docs/recipes/email-template.md`](docs/recipes/email-template.md)
+  - [`docs/recipes/json-input.md`](docs/recipes/json-input.md)
+
+## 示例 / Examples
+
+- `src/examples/hello/`
+  - 最小变量插值与 filter
+  - Minimal interpolation and filters
+- `src/examples/report/`
+  - 循环、条件分支与嵌套对象
+  - Loops, conditionals, and nested objects
+- `src/examples/email/`
+  - 更接近真实业务的文本模板
+  - A more realistic text template
+- `src/examples/include_loader/`
+  - `Engine + Loader + include` 的模板组合
+  - Template composition with `Engine + Loader + include`
+- `src/examples/html_safe/`
+  - `with_autoescape(true)` 与 `| safe`
+  - `with_autoescape(true)` and `| safe`
+- `src/examples/custom_filter/`
+  - `Engine::register_filter(...)` 自定义 filter
+  - Custom filters via `Engine::register_filter(...)`
+- `src/examples/from_json/`
+  - `from_json(...)` 把 JSON 转成模板上下文
+  - Convert JSON into template context with `from_json(...)`
+
+运行示例 / Run an example:
+
+```text
+moon run src/examples/hello
+moon run src/examples/include_loader
+moon run src/examples/html_safe
+moon run src/examples/custom_filter
+moon run src/examples/from_json
+```
+
+## 能力摘要 / Feature Summary
 
 - 纯文本渲染 / plain text rendering
-- `{{ expr }}` 变量插值，支持点路径访问 / interpolation with dotted lookup such as `{{ user.name }}`
-- `{% if expr %}...{% else %}...{% endif %}` 条件分支 / conditional blocks
-- `{% for item in items %}...{% endfor %}` 循环 / array iteration blocks
-- 内置过滤器 / built-in filters:
+- `{{ expr }}` 插值与点路径访问 / interpolation with dotted lookup
+- `{% if %}` / `{% else %}` / `{% endif %}` 条件分支 / conditional blocks
+- `{% for %}` / `{% endfor %}` 循环，支持嵌套控制块 / loops with nested control blocks
+- 内置 filters / built-in filters:
   - `upper`
   - `lower`
   - `trim`
   - `default(...)`
   - `join(...)`
   - `escape`
-- 比较与布尔表达式 / comparison and boolean expressions in `if` and interpolation:
+  - `safe`
+- 比较与布尔表达式 / comparison and boolean expressions:
   - `== != < <= > >=`
   - `and or not`
-  - parentheses grouping such as `(a or b) and c`
+  - parentheses grouping
+- `{% include "template_name" %}` 模板包含 / template inclusion
+- whitespace control / 空白控制：`{%-` / `-%}` 和 `{{-` / `-}}`
+- `{# ... #}` 模板注释 / template comments
+- Engine 级 autoescape / engine-level autoescape
+- `Template::ast()` 调试访问 / AST debug accessor
+- `from_json` / `from_map` 上下文转换 / context conversion helpers
 - 结构化错误类型与源码位置 / structured errors with source spans
-- 预编译模板 / parse once, render many times
-- `Engine::register_filter(...)` 自定义过滤器 / custom filter registration via `Engine::register_filter(...)`
-- `{% include "template_name" %}` 模板包含 / template inclusion via `{% include "template_name" %}`
-- whitespace control / 空白控制: `{%-` / `-%}` and `{{-` / `-}}`
-- `{# ... #}` 模板注释 / template comments via `{# ... #}`
-- Engine 级 autoescape / engine-level autoescape: `Engine::with_autoescape(true)`
-- `| safe` 过滤器阻止自动转义 / `| safe` filter to opt out of autoescaping
-- `Template::ast()` 调试访问 / AST debug accessor via `Template::ast()`
-- `from_json` / `from_map` JSON 和 Map 到上下文值的转换 / JSON and Map to context Value conversion
-
-## 示例 / Example
-
-```moonbit
-let tpl = @mold.Template::parse(
-  "Hello, {{ user.name | upper }}!\n\
-  {% for item in items %}- {{ item }}\n{% endfor %}",
-)
-
-let ctx = @mold.object({
-  "user": @mold.object({
-    "name": @mold.string("alice"),
-  }),
-  "items": @mold.array([
-    @mold.string("apple"),
-    @mold.string("banana"),
-  ]),
-})
-
-let out = tpl.render(ctx) catch {
-  _ => "render failed"
-}
-```
-
-## 示例目录 / Example Programs
-
-- `src/examples/hello/`
-  - 最小变量插值与过滤器 / minimal interpolation and filters
-- `src/examples/report/`
-  - 循环、条件分支与嵌套对象 / loops, conditionals, and nested objects
-- `src/examples/email/`
-  - 更接近真实业务邮件模板 / a more realistic email template example
-
-## 模板组合 / Template Composition
-
-通过 `Engine` + `Loader` 组合多个模板。
-
-Compose multiple templates with `Engine` + `Loader`.
-
-```moonbit
-let engine = @mold.Engine::new().with_loader(fn(name) {
-  match name {
-    "header" => Some("Header: {{ title }}\n")
-    "footer" => Some("Footer: {{ company }}")
-    _ => None
-  }
-})
-
-let output = engine.render(
-  "{% include \"header\" %}\nContent goes here.\n{% include \"footer\" %}",
-  @mold.object({
-    "title": @mold.string("My Report"),
-    "company": @mold.string("ACME Corp"),
-  }),
-)
-```
 
 ## HTML 安全 / HTML Safety
 
-默认不启用自动转义，适合通用文本场景。对 HTML 输出可显式启用：
+默认情况下，`mold` 不自动转义 HTML，适合通用文本生成场景。输出 HTML 时，建议显式使用 `Engine::with_autoescape(true)`。
 
-Autoescaping is disabled by default for general text rendering. Enable it explicitly for HTML output:
+By default, `mold` does not autoescape HTML, which keeps it suitable for general text generation. For HTML output, explicitly enable `Engine::with_autoescape(true)`.
 
 ```moonbit
 let engine = @mold.Engine::new().with_autoescape(true)
 
 let output = engine.render(
-  "{{ user_input }}",
-  @mold.object({ "user_input": @mold.string("<script>alert(1)</script>") }),
+  "{{ user_input }} | {{ trusted_html | safe }}",
+  @mold.object({
+    "user_input": @mold.string("<strong>escaped</strong>"),
+    "trusted_html": @mold.string("<em>kept</em>"),
+  }),
 )
-// 输出 / Output: &lt;script&gt;alert(1)&lt;/script&gt;
 ```
 
-如需局部输出原始 HTML：`{{ html_content | safe }}`。
-
-To emit raw HTML for specific values, use `{{ html_content | safe }}`.
-
-## API / API Reference
-
-### 快速渲染 / Quick Render
+## API 摘要 / API Snapshot
 
 ```moonbit
 pub fn render(source : String, ctx : Value) -> String raise MoldError
-```
 
-### 模板编译 / Template Compilation
-
-```moonbit
 pub fn Template::parse(source : String) -> Template raise MoldError
 pub fn Template::render(self : Template, ctx : Value) -> String raise MoldError
 pub fn Template::source(self : Template) -> String
 pub fn Template::ast(self : Template) -> Array[Node]
-```
 
-### 引擎 / Engine
-
-```moonbit
 pub fn Engine::new() -> Engine
-pub fn Engine::with_autoescape(self : Engine, autoescape : Bool) -> Engine
 pub fn Engine::with_loader(self : Engine, loader : Loader) -> Engine
+pub fn Engine::with_autoescape(self : Engine, autoescape : Bool) -> Engine
 pub fn Engine::register_filter(self : Engine, name : String, filter : Filter) -> Unit raise MoldError
 pub fn Engine::parse(self : Engine, source : String) -> Template raise MoldError
 pub fn Engine::render(self : Engine, source : String, ctx : Value) -> String raise MoldError
 ```
-
-### 自定义过滤器 / Custom Filters
-
-```moonbit
-pub type Filter = (Value, Array[Value]) -> Value
-```
-
-### 加载器 / Loader
-
-```moonbit
-pub type Loader = (String) -> String?
-
-pub fn Engine::new() -> Engine
-pub fn Engine::with_loader(self : Engine, loader : Loader) -> Engine
-```
-
-### 运行时值模型 / Runtime Value Model
-
-```moonbit
-pub enum Value {
-  Null
-  Bool(Bool)
-  Int(Int)
-  Float(Double)
-  String(String)
-  Array(Array[Value])
-  Object(Map[String, Value])
-}
-
-pub fn from_json(json : Json) -> Value
-pub fn from_map(map : Map[String, Value]) -> Value
-```
-
-### 错误示例 / Error Diagnostics
-
-`mold` 的所有错误都包含位置信息，便于快速定位模板问题。
-
-All `mold` errors include source location information to make template issues easier to diagnose.
-
-模板输入 `{{ missing }}`：
-
-For template input `{{ missing }}`:
-```text
-Error: MissingVariable("missing variable: missing")
-```
-
-模板输入 `{{ name | unknown }}`：
-
-For template input `{{ name | unknown }}`:
-```text
-Error: UnknownFilter("unknown")
-```
-
-模板输入 `{% include "no_such_tpl" %}` 且 loader 找不到：
-
-For template input `{% include "no_such_tpl" %}` when the loader cannot resolve it:
-```text
-Error: MissingInclude("no_such_tpl")
-```
-
-模板输入 `{% if %}`（条件为空）：
-
-For template input `{% if %}` with an empty condition:
-```text
-Error: LexerError(("empty if condition", SourceSpan{start:0, end:6, line:1, column:1}))
-```
-
-在同一个 Engine 上重复注册同名 filter：
-
-When registering the same filter name twice on one `Engine`:
-```text
-Error: DuplicateFilter("upper")
-```
-
-## 开发 / Development
-
-```text
-moon fmt
-moon check
-moon test
-```
-
-运行 benchmark / Run benchmarks:
-
-```text
-moon bench
-```
-
-当前 benchmark 结果表明，`Template::parse(...)` 一次后重复 `render(...)`，明显快于每次都 `parse + render`。
-
-Current benchmarks already show that parsing once and rendering many times is significantly faster than reparsing on every render.
 
 ## 当前限制 / Current Limits
 
@@ -259,6 +169,11 @@ Current benchmarks already show that parsing once and rendering many times is si
 - 不支持宏系统 / no macro system
 - 不支持异步模板 / no async templates
 - 不支持自动模板目录扫描 / no automatic template discovery
+
+## 仓库链接 / Repository Links
+
+- GitHub: <https://github.com/robinfang/mold>
+- GitLink: <https://www.gitlink.org.cn/robinfang/mold>
 
 ## 发布状态 / Release Status
 

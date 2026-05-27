@@ -134,6 +134,27 @@ test "if with interpolation in body" {
 }
 
 ///|
+test "nested if uses nearest else" {
+  let output = @mold.render(
+    "{% if outer %}A{% if inner %}B{% else %}C{% endif %}D{% endif %}",
+    @mold.object({ "outer": @mold.bool(true), "inner": @mold.bool(false) }),
+  )
+  assert_eq(output, "ACD")
+}
+
+///|
+test "if body can contain nested for loop" {
+  let output = @mold.render(
+    "{% if show %}{% for item in items %}[{{ item }}]{% endfor %}{% endif %}",
+    @mold.object({
+      "show": @mold.bool(true),
+      "items": @mold.array([@mold.string("a"), @mold.string("b")]),
+    }),
+  )
+  assert_eq(output, "[a][b]")
+}
+
+///|
 test "if supports equality comparison" {
   let output = @mold.render(
     "{% if user.name == \"Alice\" %}yes{% else %}no{% endif %}",
@@ -276,6 +297,46 @@ test "for loop with nested interpolation" {
     }),
   )
   assert_eq(output, "Alice,Bob,")
+}
+
+///|
+test "for loop body can contain nested if" {
+  let output = @mold.render(
+    "{% for user in users %}{% if user.active %}{{ user.name }}{% else %}skip{% endif %}|{% endfor %}",
+    @mold.object({
+      "users": @mold.array([
+        @mold.object({
+          "name": @mold.string("Alice"),
+          "active": @mold.bool(true),
+        }),
+        @mold.object({
+          "name": @mold.string("Bob"),
+          "active": @mold.bool(false),
+        }),
+      ]),
+    }),
+  )
+  assert_eq(output, "Alice|skip|")
+}
+
+///|
+test "nested for loops keep outer scope values" {
+  let output = @mold.render(
+    "{% for row in rows %}{{ row.name }}:{% for cell in row.items %}{{ cell }}{% endfor %};{% endfor %}",
+    @mold.object({
+      "rows": @mold.array([
+        @mold.object({
+          "name": @mold.string("A"),
+          "items": @mold.array([@mold.string("1"), @mold.string("2")]),
+        }),
+        @mold.object({
+          "name": @mold.string("B"),
+          "items": @mold.array([@mold.string("3")]),
+        }),
+      ]),
+    }),
+  )
+  assert_eq(output, "A:12;B:3;")
 }
 
 ///|
@@ -528,6 +589,22 @@ test "nested include within depth limit" {
 }
 
 ///|
+test "include exceeding depth limit raises error" {
+  let engine = @mold.Engine::new().with_loader(fn(name) {
+    match name {
+      "loop" => Some("{% include \"loop\" %}")
+      _ => None
+    }
+  })
+  let result = try? engine.render("{% include \"loop\" %}", @mold.null())
+  match result {
+    Err(@mold.IncludeDepthExceeded) => ()
+    Ok(_) => fail("expected include depth exceeded error")
+    _ => fail("unexpected error variant")
+  }
+}
+
+///|
 test "include preserves filters of parent engine" {
   let engine = @mold.Engine::new().with_loader(fn(name) {
     match name {
@@ -540,6 +617,56 @@ test "include preserves filters of parent engine" {
     @mold.object({ "name": @mold.string("alice") }),
   )
   assert_eq(output, "Hi, ALICE")
+}
+
+///|
+test "engine parse reuses compiled includes across renders" {
+  let mut load_count = 0
+  let engine = @mold.Engine::new().with_loader(fn(name) {
+    load_count = load_count + 1
+    match name {
+      "header" => Some("Hi, {{ name }}")
+      _ => None
+    }
+  })
+  let template = engine.parse("{% include \"header\" %}")
+  let first = template.render(@mold.object({ "name": @mold.string("Alice") }))
+  let second = template.render(@mold.object({ "name": @mold.string("Bob") }))
+  assert_eq(first, "Hi, Alice")
+  assert_eq(second, "Hi, Bob")
+  assert_eq(load_count, 1)
+}
+
+///|
+test "include propagates lexer error from included template" {
+  let engine = @mold.Engine::new().with_loader(fn(name) {
+    match name {
+      "broken" => Some("{% if %}")
+      _ => None
+    }
+  })
+  let result = try? engine.render("{% include \"broken\" %}", @mold.null())
+  match result {
+    Err(@mold.LexerError((msg, _))) =>
+      assert_true(msg.contains("empty if condition"))
+    Ok(_) => fail("expected lexer error")
+    _ => fail("unexpected error variant")
+  }
+}
+
+///|
+test "include respects comments and whitespace control" {
+  let engine = @mold.Engine::new().with_loader(fn(name) {
+    match name {
+      "name_tag" => Some(" {# hidden #}{{- name -}} ")
+      _ => None
+    }
+  })
+  let output = engine.render(
+    "A{% include \"name_tag\" %}B",
+    @mold.object({ "name": @mold.string("X") }),
+  )
+  assert_eq(output, "AXB")
 }
 
 ///|

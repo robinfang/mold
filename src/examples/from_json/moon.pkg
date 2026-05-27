@@ -1,0 +1,8 @@
+import {
+  "robinfang/mold",
+  "moonbitlang/core/json",
+}
+
+options(
+  "is-main": true,
+)

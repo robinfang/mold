@@ -5,6 +5,7 @@ fn render_ast(
   source : String,
   filters : Array[FilterEntry],
   loader : Loader?,
+  includes : Array[CompiledInclude],
   autoescape : Bool,
 ) -> String raise MoldError {
   render_ast_scoped(
@@ -14,6 +15,7 @@ fn render_ast(
     Map::from_array([]),
     filters,
     loader,
+    includes,
     0,
     autoescape,
   )
@@ -27,6 +29,7 @@ fn render_ast_scoped(
   scope : Map[String, Value],
   filters : Array[FilterEntry],
   loader : Loader?,
+  includes : Array[CompiledInclude],
   depth : Int,
   autoescape : Bool,
 ) -> String raise MoldError {
@@ -53,13 +56,13 @@ fn render_ast_scoped(
         if is_truthy(cond) {
           builder.write_string(
             render_ast_scoped(
-              then_nodes, ctx, source, scope, filters, loader, depth, autoescape,
+              then_nodes, ctx, source, scope, filters, loader, includes, depth, autoescape,
             ),
           )
         } else {
           builder.write_string(
             render_ast_scoped(
-              else_nodes, ctx, source, scope, filters, loader, depth, autoescape,
+              else_nodes, ctx, source, scope, filters, loader, includes, depth, autoescape,
             ),
           )
         }
@@ -74,7 +77,8 @@ fn render_ast_scoped(
               ])
               builder.write_string(
                 render_ast_scoped(
-                  body, ctx, source, item_scope, filters, loader, depth, autoescape,
+                  body, ctx, source, item_scope, filters, loader, includes, depth,
+                  autoescape,
                 ),
               )
             }
@@ -85,27 +89,45 @@ fn render_ast_scoped(
         if depth >= 10 {
           raise IncludeDepthExceeded
         }
-        match loader {
-          None => raise MissingInclude(name)
-          Some(load) =>
-            match load(name) {
+        match find_compiled_include(includes, name) {
+          Some(entry) =>
+            builder.write_string(
+              render_ast_scoped(
+                entry.ast,
+                ctx,
+                entry.source,
+                scope,
+                filters,
+                loader,
+                includes,
+                depth + 1,
+                autoescape,
+              ),
+            )
+          None =>
+            match loader {
               None => raise MissingInclude(name)
-              Some(included_source) => {
-                let included_tokens = lex(included_source)
-                let included_nodes = parse(included_tokens)
-                builder.write_string(
-                  render_ast_scoped(
-                    included_nodes,
-                    ctx,
-                    included_source,
-                    scope,
-                    filters,
-                    loader,
-                    depth + 1,
-                    autoescape,
-                  ),
-                )
-              }
+              Some(load) =>
+                match load(name) {
+                  None => raise MissingInclude(name)
+                  Some(included_source) => {
+                    let included_tokens = lex(included_source)
+                    let included_nodes = parse(included_tokens)
+                    builder.write_string(
+                      render_ast_scoped(
+                        included_nodes,
+                        ctx,
+                        included_source,
+                        scope,
+                        filters,
+                        loader,
+                        includes,
+                        depth + 1,
+                        autoescape,
+                      ),
+                    )
+                  }
+                }
             }
         }
       }

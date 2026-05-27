@@ -2,11 +2,19 @@
 pub type Loader = (String) -> String?
 
 ///|
+struct CompiledInclude {
+  name : String
+  source : String
+  ast : Array[Node]
+}
+
+///|
 pub struct Template {
   source : String
   ast : Array[Node]
   filters : Array[FilterEntry]
   loader : Loader?
+  includes : Array[CompiledInclude]
   autoescape : Bool
 }
 
@@ -18,6 +26,77 @@ pub struct Engine {
 }
 
 ///|
+fn find_compiled_include(
+  includes : Array[CompiledInclude],
+  name : String,
+) -> CompiledInclude? {
+  for entry in includes {
+    if entry.name == name {
+      return Some(entry)
+    }
+  }
+  None
+}
+
+///|
+fn compile_named_include(
+  name : String,
+  loader : Loader,
+  depth : Int,
+  includes : Array[CompiledInclude],
+) -> Unit raise MoldError {
+  match find_compiled_include(includes, name) {
+    Some(_) => return
+    None => ()
+  }
+  if depth >= 10 {
+    raise IncludeDepthExceeded
+  }
+  let source = match loader(name) {
+    Some(source) => source
+    None => raise MissingInclude(name)
+  }
+  let tokens = lex(source)
+  let nodes = parse(tokens)
+  includes.push({ name, source, ast: nodes })
+  compile_include_nodes(nodes, loader, depth + 1, includes)
+}
+
+///|
+fn compile_include_nodes(
+  nodes : Array[Node],
+  loader : Loader,
+  depth : Int,
+  includes : Array[CompiledInclude],
+) -> Unit raise MoldError {
+  for node in nodes {
+    match node {
+      Text(_) => ()
+      Interpolation(_) => ()
+      If(_, then_nodes, else_nodes) => {
+        compile_include_nodes(then_nodes, loader, depth, includes)
+        compile_include_nodes(else_nodes, loader, depth, includes)
+      }
+      For(_, _, body) => compile_include_nodes(body, loader, depth, includes)
+      Include(name) => compile_named_include(name, loader, depth, includes)
+    }
+  }
+}
+
+///|
+fn compile_includes(
+  nodes : Array[Node],
+  loader : Loader?,
+) -> Array[CompiledInclude] raise MoldError {
+  let includes : Array[CompiledInclude] = []
+  match loader {
+    None => ()
+    Some(load) => compile_include_nodes(nodes, load, 0, includes)
+  }
+  includes
+}
+
+///|
 fn parse_with_filters(
   source : String,
   filters : Array[FilterEntry],
@@ -26,7 +105,8 @@ fn parse_with_filters(
 ) -> Template raise MoldError {
   let tokens = lex(source)
   let nodes = parse(tokens)
-  { source, ast: nodes, filters, loader, autoescape }
+  let includes = compile_includes(nodes, loader)
+  { source, ast: nodes, filters, loader, includes, autoescape }
 }
 
 ///|
@@ -42,6 +122,7 @@ pub fn Template::render(self : Template, ctx : Value) -> String raise MoldError 
     self.source,
     self.filters,
     self.loader,
+    self.includes,
     self.autoescape,
   )
 }
