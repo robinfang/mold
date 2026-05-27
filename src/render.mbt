@@ -5,8 +5,11 @@ fn render_ast(
   source : String,
   filters : Array[FilterEntry],
   loader : Loader?,
+  autoescape : Bool,
 ) -> String raise MoldError {
-  render_ast_scoped(nodes, ctx, source, Map::from_array([]), filters, loader, 0)
+  render_ast_scoped(
+    nodes, ctx, source, Map::from_array([]), filters, loader, 0, autoescape,
+  )
 }
 
 ///|
@@ -18,6 +21,7 @@ fn render_ast_scoped(
   filters : Array[FilterEntry],
   loader : Loader?,
   depth : Int,
+  autoescape : Bool,
 ) -> String raise MoldError {
   let builder = StringBuilder::new(size_hint=source.length())
   for node in nodes {
@@ -25,20 +29,30 @@ fn render_ast_scoped(
       Text(text) => builder.write_string(text)
       Interpolation(expr) => {
         let value = eval_expr(expr, ctx, scope, filters)
-        builder.write_string(value_to_string(value, ""))
+        if autoescape {
+          match value {
+            Safe(inner) => builder.write_string(value_to_string(inner, ""))
+            _ => {
+              let escaped = filter_escape(value, [])
+              builder.write_string(value_to_string(escaped, ""))
+            }
+          }
+        } else {
+          builder.write_string(value_to_string(value, ""))
+        }
       }
       If(cond_expr, then_nodes, else_nodes) => {
         let cond = eval_expr(cond_expr, ctx, scope, filters)
         if is_truthy(cond) {
           builder.write_string(
             render_ast_scoped(
-              then_nodes, ctx, source, scope, filters, loader, depth,
+              then_nodes, ctx, source, scope, filters, loader, depth, autoescape,
             ),
           )
         } else {
           builder.write_string(
             render_ast_scoped(
-              else_nodes, ctx, source, scope, filters, loader, depth,
+              else_nodes, ctx, source, scope, filters, loader, depth, autoescape,
             ),
           )
         }
@@ -53,7 +67,7 @@ fn render_ast_scoped(
               ])
               builder.write_string(
                 render_ast_scoped(
-                  body, ctx, source, item_scope, filters, loader, depth,
+                  body, ctx, source, item_scope, filters, loader, depth, autoescape,
                 ),
               )
             }
@@ -81,6 +95,7 @@ fn render_ast_scoped(
                     filters,
                     loader,
                     depth + 1,
+                    autoescape,
                   ),
                 )
               }
@@ -162,7 +177,15 @@ fn eval_binary_op(
 
 ///|
 fn values_equal(left : Value, right : Value) -> Bool {
-  match (left, right) {
+  let l = match left {
+    Safe(v) => v
+    _ => left
+  }
+  let r = match right {
+    Safe(v) => v
+    _ => right
+  }
+  match (l, r) {
     (Null, Null) => true
     (Bool(a), Bool(b)) => a == b
     (Int(a), Int(b)) => a == b
@@ -176,7 +199,15 @@ fn values_equal(left : Value, right : Value) -> Bool {
 
 ///|
 fn compare_values(left : Value, right : Value) -> Int raise MoldError {
-  match (left, right) {
+  let l = match left {
+    Safe(v) => v
+    _ => left
+  }
+  let r = match right {
+    Safe(v) => v
+    _ => right
+  }
+  match (l, r) {
     (Int(a), Int(b)) => compare_ints(a, b)
     (Float(a), Float(b)) => compare_doubles(a, b)
     (Int(a), Float(b)) => compare_doubles(a.to_double(), b)
@@ -225,6 +256,7 @@ fn is_truthy(value : Value) -> Bool {
     Null => false
     Bool(b) => b
     String(s) => s.length() > 0
+    Safe(inner) => is_truthy(inner)
     _ => true
   }
 }

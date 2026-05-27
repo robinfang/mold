@@ -45,6 +45,7 @@ fn value_to_string(value : Value, expr : String) -> String raise MoldError {
     Int(integer) => integer.to_string()
     Float(number) => number.to_string()
     String(text) => text
+    Safe(inner) => value_to_string(inner, expr)
     Array(_) =>
       raise TypeMismatch(("cannot render array value: \{expr}", "scalar"))
     Object(_) =>

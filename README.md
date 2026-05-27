@@ -38,6 +38,9 @@ MoonBit still lacks a focused template engine with clean APIs, solid tests, and 
 - `{% include "template_name" %}` 模板包含 / template inclusion via `{% include "template_name" %}`
 - whitespace control / 空白控制: `{%-` / `-%}` and `{{-` / `-}}`
 - `{# ... #}` 模板注释 / template comments via `{# ... #}`
+- Engine 级 autoescape / engine-level autoescape: `Engine::with_autoescape(true)`
+- `| safe` 过滤器阻止自动转义 / `| safe` filter to opt out of autoescaping
+- `Template::ast()` 调试访问 / AST debug accessor via `Template::ast()`
 
 ## 示例 / Example
 
@@ -85,12 +88,15 @@ pub fn render(source : String, ctx : Value) -> String raise MoldError
 pub fn Template::parse(source : String) -> Template raise MoldError
 pub fn Template::render(self : Template, ctx : Value) -> String raise MoldError
 pub fn Template::source(self : Template) -> String
+pub fn Template::ast(self : Template) -> Array[Node]
 ```
 
 ### 引擎 / Engine
 
 ```moonbit
 pub fn Engine::new() -> Engine
+pub fn Engine::with_autoescape(self : Engine, autoescape : Bool) -> Engine
+pub fn Engine::with_loader(self : Engine, loader : Loader) -> Engine
 pub fn Engine::register_filter(self : Engine, name : String, filter : Filter) -> Unit raise MoldError
 pub fn Engine::parse(self : Engine, source : String) -> Template raise MoldError
 pub fn Engine::render(self : Engine, source : String, ctx : Value) -> String raise MoldError

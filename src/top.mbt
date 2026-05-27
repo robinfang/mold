@@ -7,12 +7,14 @@ pub struct Template {
   ast : Array[Node]
   filters : Array[FilterEntry]
   loader : Loader?
+  autoescape : Bool
 }
 
 ///|
 pub struct Engine {
   filters : Array[FilterEntry]
   loader : Loader?
+  autoescape : Bool
 }
 
 ///|
@@ -20,20 +22,21 @@ fn parse_with_filters(
   source : String,
   filters : Array[FilterEntry],
   loader : Loader?,
+  autoescape : Bool,
 ) -> Template raise MoldError {
   let tokens = lex(source)
   let nodes = parse(tokens)
-  { source, ast: nodes, filters, loader }
+  { source, ast: nodes, filters, loader, autoescape }
 }
 
 ///|
 pub fn Template::parse(source : String) -> Template raise MoldError {
-  parse_with_filters(source, default_filter_registry(), None)
+  parse_with_filters(source, default_filter_registry(), None, false)
 }
 
 ///|
 pub fn Template::render(self : Template, ctx : Value) -> String raise MoldError {
-  render_ast(self.ast, ctx, self.source, self.filters, self.loader)
+  render_ast(self.ast, ctx, self.source, self.filters, self.loader, self.autoescape)
 }
 
 ///|
@@ -42,13 +45,23 @@ pub fn Template::source(self : Template) -> String noraise {
 }
 
 ///|
+pub fn Template::ast(self : Template) -> Array[Node] noraise {
+  self.ast
+}
+
+///|
 pub fn Engine::new() -> Engine noraise {
-  Engine::{ filters: default_filter_registry(), loader: None }
+  Engine::{ filters: default_filter_registry(), loader: None, autoescape: false }
 }
 
 ///|
 pub fn Engine::with_loader(self : Engine, loader : Loader) -> Engine noraise {
-  Engine::{ filters: self.filters, loader: Some(loader) }
+  Engine::{ filters: self.filters, loader: Some(loader), autoescape: self.autoescape }
+}
+
+///|
+pub fn Engine::with_autoescape(self : Engine, autoescape : Bool) -> Engine noraise {
+  Engine::{ filters: self.filters, loader: self.loader, autoescape }
 }
 
 ///|
@@ -65,7 +78,12 @@ pub fn Engine::parse(
   self : Engine,
   source : String,
 ) -> Template raise MoldError {
-  parse_with_filters(source, copy_filter_registry(self.filters), self.loader)
+  parse_with_filters(
+    source,
+    copy_filter_registry(self.filters),
+    self.loader,
+    self.autoescape,
+  )
 }
 
 ///|

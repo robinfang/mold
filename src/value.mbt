@@ -7,6 +7,7 @@ pub enum Value {
   String(String)
   Array(Array[Value])
   Object(Map[String, Value])
+  Safe(Value)
 }
 
 ///|

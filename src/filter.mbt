@@ -49,21 +49,35 @@ fn apply_filter(
   name : String,
   args : Array[Value],
 ) -> Value raise MoldError {
-  match name {
-    "upper" => return filter_upper(value, args)
-    "lower" => return filter_lower(value, args)
-    "trim" => return filter_trim(value, args)
-    "default" => return filter_default_impl(value, args)
-    "join" => return filter_join(value, args)
-    "escape" => return filter_escape(value, args)
-    _ => ()
+  let peeled = match value {
+    Safe(inner) => inner
+    _ => value
   }
-  for entry in filters {
-    if entry.name == name {
-      return (entry.filter)(value, args)
+  let result = match name {
+    "upper" => filter_upper(peeled, args)
+    "lower" => filter_lower(peeled, args)
+    "trim" => filter_trim(peeled, args)
+    "default" => filter_default_impl(peeled, args)
+    "join" => filter_join(peeled, args)
+    "escape" => filter_escape(peeled, args)
+    "safe" => filter_safe(value, args)
+    _ => {
+      for entry in filters {
+        if entry.name == name {
+          let inner = (entry.filter)(peeled, args)
+          match value {
+            Safe(_) => return Safe(inner)
+            _ => return inner
+          }
+        }
+      }
+      raise UnknownFilter(name)
     }
   }
-  raise UnknownFilter(name)
+  match value {
+    Safe(_) => Safe(result)
+    _ => result
+  }
 }
 
 ///|
@@ -75,6 +89,7 @@ fn is_builtin_filter_name(name : String) -> Bool {
     "default" => true
     "join" => true
     "escape" => true
+    "safe" => true
     _ => false
   }
 }
@@ -168,3 +183,9 @@ fn escape_html(text : String) -> String {
     buf.to_string()
   }
 }
+
+///|
+fn filter_safe(value : Value, _args : Array[Value]) -> Value noraise {
+  Safe(value)
+}
+

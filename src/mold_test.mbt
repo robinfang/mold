@@ -615,6 +615,62 @@ test "multiline comment is stripped" {
 }
 
 ///|
+test "autoescape escapes html in interpolation" {
+  let engine = @mold.Engine::new().with_autoescape(true)
+  let output = engine.render(
+    "{{ text }}",
+    @mold.object({ "text": @mold.string("<b>bold</b>") }),
+  )
+  assert_eq(output, "&lt;b&gt;bold&lt;/b&gt;")
+}
+
+///|
+test "autoescape off leaves html untouched" {
+  let output = @mold.render(
+    "{{ text }}",
+    @mold.object({ "text": @mold.string("<b>bold</b>") }),
+  )
+  assert_eq(output, "<b>bold</b>")
+}
+
+///|
+test "safe filter prevents autoescape" {
+  let engine = @mold.Engine::new().with_autoescape(true)
+  let output = engine.render(
+    "{{ text | safe }}",
+    @mold.object({ "text": @mold.string("<b>bold</b>") }),
+  )
+  assert_eq(output, "<b>bold</b>")
+}
+
+///|
+test "safe filter preserves safety through other filters" {
+  let engine = @mold.Engine::new().with_autoescape(true)
+  let output = engine.render(
+    "{{ text | safe | trim }}",
+    @mold.object({ "text": @mold.string("  <b>bold</b>  ") }),
+  )
+  assert_eq(output, "<b>bold</b>")
+}
+
+///|
+test "escape filter on safe value still escapes" {
+  let engine = @mold.Engine::new().with_autoescape(true)
+  let output = engine.render(
+    "{{ text | safe | escape }}",
+    @mold.object({ "text": @mold.string("<b>bold</b>") }),
+  )
+  assert_eq(output, "&lt;b&gt;bold&lt;/b&gt;")
+}
+
+///|
+test "Template.ast returns parsed AST" {
+  let template = @mold.Template::parse("hello {{ name }}")
+  let nodes = template.ast()
+  assert_eq(nodes.length(), 3)
+}
+
+///|
 test (b : @bench.T) {
   let src = "{% for item in items %}{{ item }}{% endfor %}{% if flag %}yes{% endif %}"
   let ctx_obj = @mold.object({
