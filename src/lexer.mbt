@@ -55,11 +55,28 @@ fn lex_blocks(source : String) -> Array[BlockToken] raise MoldError {
     let raw_tag = segment[0].to_owned()
     let block_end = offset + raw_tag.length() + 2
     let span = make_span(source, block_start, block_end)
-    let tag = raw_tag.trim().to_owned()
+
+    let strip_before = raw_tag.length() > 0 && raw_tag.code_unit_at(0) == '-'
+    let strip_after =
+      raw_tag.length() > 0 &&
+      raw_tag.code_unit_at(raw_tag.length() - 1) == '-'
+
+    let tag = clean_strip_markers(raw_tag).trim().to_owned()
+
+    if strip_before && blocks.length() > 0 {
+      let last_idx = blocks.length() - 1
+      match blocks[last_idx] {
+        BlockText(text, start) =>
+          blocks[last_idx] = BlockText(rstrip_whitespace(text), start)
+        _ => ()
+      }
+    }
+
     blocks.push(parse_block_tag(tag, span))
     offset = block_end
 
-    let text = segment[1].to_owned()
+    let raw_text = segment[1].to_owned()
+    let text = if strip_after { lstrip_whitespace(raw_text) } else { raw_text }
     blocks.push(BlockText(text, offset))
     offset = offset + segment[1].length()
     for j = 2; j < segment.length(); j = j + 1 {
@@ -182,6 +199,7 @@ fn lex_interpolations(
   full_source : String,
   start_offset : Int,
 ) -> Array[Token] raise MoldError {
+  let source = strip_template_comments(source)
   let parts = source.split("{{").collect()
   if parts.length() == 0 {
     return []
@@ -214,14 +232,32 @@ fn lex_interpolations(
     let raw_expr = segment[0].to_owned()
     let interp_end = offset + raw_expr.length() + 2
     let span = make_span(full_source, interp_start, interp_end)
-    let expr = raw_expr.trim().to_owned()
+
+    let strip_before =
+      raw_expr.length() > 0 && raw_expr.code_unit_at(0) == '-'
+    let strip_after =
+      raw_expr.length() > 0 &&
+      raw_expr.code_unit_at(raw_expr.length() - 1) == '-'
+
+    let expr = clean_strip_markers(raw_expr).trim().to_owned()
     if expr.length() == 0 {
       raise LexerError(("empty interpolation expression", span))
     }
+
+    if strip_before && tokens.length() > 0 {
+      let last_idx = tokens.length() - 1
+      match tokens[last_idx] {
+        Text(text, text_span) =>
+          tokens[last_idx] = Text(rstrip_whitespace(text), text_span)
+        _ => ()
+      }
+    }
+
     tokens.push(Interpolation(expr, span))
     offset = interp_end
 
-    let text = segment[1].to_owned()
+    let raw_text = segment[1].to_owned()
+    let text = if strip_after { lstrip_whitespace(raw_text) } else { raw_text }
     tokens.push(
       Text(text, make_span(full_source, offset, offset + segment[1].length())),
     )
@@ -240,4 +276,90 @@ fn lex_interpolations(
   } nobreak {
     tokens
   }
+}
+
+///|
+fn clean_strip_markers(raw : String) -> String {
+  let chars = raw.to_array()
+  let len = chars.length()
+  let start = if len > 0 && chars[0] == '-' { 1 } else { 0 }
+  let end = if len > 0 && chars[len - 1] == '-' { len - 1 } else { len }
+  if start >= end {
+    return ""
+  }
+  if start == 0 && end == len {
+    return raw
+  }
+  let buf = StringBuilder::new(size_hint=end - start)
+  for j in start..<end {
+    buf.write_char(chars[j])
+  }
+  buf.to_string()
+}
+
+///|
+fn lstrip_whitespace(s : String) -> String {
+  let chars = s.to_array()
+  let mut i = 0
+  while i < chars.length() {
+    let ch = chars[i]
+    if ch != ' ' && ch != '\t' && ch != '\n' && ch != '\r' {
+      break
+    }
+    i = i + 1
+  }
+  if i == 0 {
+    s
+  } else {
+    let buf = StringBuilder::new(size_hint=chars.length() - i)
+    for j in i..<chars.length() {
+      buf.write_char(chars[j])
+    }
+    buf.to_string()
+  }
+}
+
+///|
+fn rstrip_whitespace(s : String) -> String {
+  let chars = s.to_array()
+  let mut end = chars.length()
+  while end > 0 {
+    let ch = chars[end - 1]
+    if ch != ' ' && ch != '\t' && ch != '\n' && ch != '\r' {
+      break
+    }
+    end = end - 1
+  }
+  if end == chars.length() {
+    s
+  } else {
+    let buf = StringBuilder::new(size_hint=end)
+    for j in 0..<end {
+      buf.write_char(chars[j])
+    }
+    buf.to_string()
+  }
+}
+
+///|
+fn strip_template_comments(text : String) -> String {
+  let chars = text.to_array()
+  let buf = StringBuilder::new(size_hint=chars.length())
+  let mut i = 0
+  while i < chars.length() {
+    if i + 1 < chars.length() && chars[i] == '{' && chars[i + 1] == '#' {
+      i = i + 2
+      while i + 1 < chars.length() {
+        if chars[i] == '#' && chars[i + 1] == '}' {
+          i = i + 2
+          break
+        }
+        i = i + 1
+      }
+    } else {
+      buf.write_char(chars[i])
+      i = i + 1
+    }
+  }
+  buf.to_string()
 }

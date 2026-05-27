@@ -543,6 +543,78 @@ test "include preserves filters of parent engine" {
 }
 
 ///|
+test "{%- strips whitespace before block tag" {
+  let output = @mold.render(
+    "hello   {%- if active %}yes{% endif %}",
+    @mold.object({ "active": @mold.bool(true) }),
+  )
+  assert_eq(output, "helloyes")
+}
+
+///|
+test "-%} strips whitespace after block tag" {
+  let output = @mold.render(
+    "{% if active -%}   world{% endif %}",
+    @mold.object({ "active": @mold.bool(true) }),
+  )
+  assert_eq(output, "world")
+}
+
+///|
+test "{{- strips whitespace before interpolation" {
+  let output = @mold.render(
+    "hello   {{- name }}!",
+    @mold.object({ "name": @mold.string("Alice") }),
+  )
+  assert_eq(output, "helloAlice!")
+}
+
+///|
+test "-}} strips whitespace after interpolation" {
+  let output = @mold.render(
+    "{{ name -}}   world",
+    @mold.object({ "name": @mold.string("Hello") }),
+  )
+  assert_eq(output, "Helloworld")
+}
+
+///|
+test "combined whitespace control on both sides" {
+  let output = @mold.render(
+    "hello\n{%- if active -%}\nyes\n{%- endif -%}\nbye",
+    @mold.object({ "active": @mold.bool(true) }),
+  )
+  assert_eq(output, "helloyesbye")
+}
+
+///|
+test "{# comment #} is removed from output" {
+  let output = @mold.render(
+    "hello{# this is a comment #}world",
+    @mold.null(),
+  )
+  assert_eq(output, "helloworld")
+}
+
+///|
+test "comment with interpolation inside is ignored" {
+  let output = @mold.render(
+    "hello{# {{ name }} #}world",
+    @mold.object({ "name": @mold.string("Alice") }),
+  )
+  assert_eq(output, "helloworld")
+}
+
+///|
+test "multiline comment is stripped" {
+  let output = @mold.render(
+    "hello{# line 1\nline 2\nline 3 #}world",
+    @mold.null(),
+  )
+  assert_eq(output, "helloworld")
+}
+
+///|
 test (b : @bench.T) {
   let src = "{% for item in items %}{{ item }}{% endfor %}{% if flag %}yes{% endif %}"
   let ctx_obj = @mold.object({

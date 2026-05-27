@@ -36,6 +36,8 @@ MoonBit still lacks a focused template engine with clean APIs, solid tests, and 
 - 预编译模板 / parse once, render many times
 - `Engine::register_filter(...)` 自定义过滤器 / custom filter registration via `Engine::register_filter(...)`
 - `{% include "template_name" %}` 模板包含 / template inclusion via `{% include "template_name" %}`
+- whitespace control / 空白控制: `{%-` / `-%}` and `{{-` / `-}}`
+- `{# ... #}` 模板注释 / template comments via `{# ... #}`
 
 ## 示例 / Example
 
