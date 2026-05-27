@@ -92,7 +92,9 @@ let out = tpl.render(ctx) catch {
 
 ## 模板组合 / Template Composition
 
-通过 `Engine` + `Loader` 组合多个模板：
+通过 `Engine` + `Loader` 组合多个模板。
+
+Compose multiple templates with `Engine` + `Loader`.
 
 ```moonbit
 let engine = @mold.Engine::new().with_loader(fn(name) {
@@ -116,6 +118,8 @@ let output = engine.render(
 
 默认不启用自动转义，适合通用文本场景。对 HTML 输出可显式启用：
 
+Autoescaping is disabled by default for general text rendering. Enable it explicitly for HTML output:
+
 ```moonbit
 let engine = @mold.Engine::new().with_autoescape(true)
 
@@ -123,12 +127,14 @@ let output = engine.render(
   "{{ user_input }}",
   @mold.object({ "user_input": @mold.string("<script>alert(1)</script>") }),
 )
-// 输出: &lt;script&gt;alert(1)&lt;/script&gt;
+// 输出 / Output: &lt;script&gt;alert(1)&lt;/script&gt;
 ```
 
 如需局部输出原始 HTML：`{{ html_content | safe }}`。
 
-## API
+To emit raw HTML for specific values, use `{{ html_content | safe }}`.
+
+## API / API Reference
 
 ### 快速渲染 / Quick Render
 
@@ -192,27 +198,39 @@ pub fn from_map(map : Map[String, Value]) -> Value
 
 `mold` 的所有错误都包含位置信息，便于快速定位模板问题。
 
+All `mold` errors include source location information to make template issues easier to diagnose.
+
 模板输入 `{{ missing }}`：
+
+For template input `{{ missing }}`:
 ```text
 Error: MissingVariable("missing variable: missing")
 ```
 
 模板输入 `{{ name | unknown }}`：
+
+For template input `{{ name | unknown }}`:
 ```text
 Error: UnknownFilter("unknown")
 ```
 
 模板输入 `{% include "no_such_tpl" %}` 且 loader 找不到：
+
+For template input `{% include "no_such_tpl" %}` when the loader cannot resolve it:
 ```text
 Error: MissingInclude("no_such_tpl")
 ```
 
 模板输入 `{% if %}`（条件为空）：
+
+For template input `{% if %}` with an empty condition:
 ```text
 Error: LexerError(("empty if condition", SourceSpan{start:0, end:6, line:1, column:1}))
 ```
 
 在同一个 Engine 上重复注册同名 filter：
+
+When registering the same filter name twice on one `Engine`:
 ```text
 Error: DuplicateFilter("upper")
 ```
@@ -242,11 +260,11 @@ Current benchmarks already show that parsing once and rendering many times is si
 - 不支持异步模板 / no async templates
 - 不支持自动模板目录扫描 / no automatic template discovery
 
-## 发布计划 / Publishing Plan
+## 发布状态 / Release Status
 
-项目会在继续稳定 API、错误定位和表达式能力后发布到 `mooncakes.io`。
+`mold` 已发布到 `mooncakes.io`，当前版本为 `0.1.0`。
 
-The package is intended to be published to `mooncakes.io` after the API and error-reporting surface are stabilized further.
+`mold` is now published on `mooncakes.io`, and the current version is `0.1.0`.
 
 ## 开源协议 / License
 
