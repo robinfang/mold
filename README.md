@@ -262,9 +262,9 @@ Current benchmarks already show that parsing once and rendering many times is si
 
 ## 发布状态 / Release Status
 
-`mold` 已发布到 `mooncakes.io`，当前版本为 `0.1.0`。
+`mold` 已发布到 `mooncakes.io`，当前版本为 `0.1.1`。
 
-`mold` is now published on `mooncakes.io`, and the current version is `0.1.0`.
+`mold` is now published on `mooncakes.io`, and the current version is `0.1.1`.
 
 ## 开源协议 / License
 
