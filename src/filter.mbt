@@ -153,6 +153,15 @@ fn filter_join(value : Value, args : Array[Value]) -> Value raise MoldError {
         first = false
         match item {
           String(s) => buf.write_string(s)
+          Int(n) => buf.write_string(n.to_string())
+          Float(d) => buf.write_string(d.to_string())
+          Bool(b) => buf.write_string(if b { "true" } else { "false" })
+          Safe(inner) => {
+            match inner {
+              String(s) => buf.write_string(s)
+              _ => buf.write_string("")
+            }
+          }
           _ => buf.write_string("")
         }
       }

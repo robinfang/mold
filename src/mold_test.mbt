@@ -671,6 +671,49 @@ test "Template.ast returns parsed AST" {
 }
 
 ///|
+test "from_json converts json to Value" {
+  let json = @json.parse("{\"name\": \"Alice\", \"age\": 30, \"active\": true, \"scores\": [1, 2, 3]}")
+  let ctx = @mold.from_json(json)
+  let output = @mold.render(
+    "{{ name }} is {{ age }}",
+    ctx,
+  )
+  assert_eq(output, "Alice is 30")
+}
+
+///|
+test "from_json handles null and bool" {
+  let json = @json.parse("{\"x\": null, \"y\": false, \"z\": true}")
+  let ctx = @mold.from_json(json)
+  let output = @mold.render(
+    "{{ x }}|{{ y }}|{{ z }}",
+    ctx,
+  )
+  assert_eq(output, "|false|true")
+}
+
+///|
+test "from_json handles nested objects" {
+  let json = @json.parse("{\"user\": {\"name\": \"Bob\", \"scores\": [10, 20]}}")
+  let ctx = @mold.from_json(json)
+  let output = @mold.render(
+    "{{ user.name }}: {{ user.scores | join(\", \") }}",
+    ctx,
+  )
+  assert_eq(output, "Bob: 10, 20")
+}
+
+///|
+test "from_map wraps map as Value" {
+  let map : Map[String, @mold.Value] = Map::from_array([
+    ("x", @mold.string("hi")),
+  ])
+  let ctx = @mold.from_map(map)
+  let output = @mold.render("{{ x }}", ctx)
+  assert_eq(output, "hi")
+}
+
+///|
 test (b : @bench.T) {
   let src = "{% for item in items %}{{ item }}{% endfor %}{% if flag %}yes{% endif %}"
   let ctx_obj = @mold.object({

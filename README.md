@@ -41,6 +41,7 @@ MoonBit still lacks a focused template engine with clean APIs, solid tests, and 
 - Engine 级 autoescape / engine-level autoescape: `Engine::with_autoescape(true)`
 - `| safe` 过滤器阻止自动转义 / `| safe` filter to opt out of autoescaping
 - `Template::ast()` 调试访问 / AST debug accessor via `Template::ast()`
+- `from_json` / `from_map` JSON 和 Map 到上下文值的转换 / JSON and Map to context Value conversion
 
 ## 示例 / Example
 
@@ -129,6 +130,28 @@ pub enum Value {
   Array(Array[Value])
   Object(Map[String, Value])
 }
+
+pub fn from_json(json : Json) -> Value
+pub fn from_map(map : Map[String, Value]) -> Value
+```
+
+### 错误示例 / Error Diagnostics
+
+```text
+-- missing variable
+Error: MissingVariable("missing variable: user.age")
+
+-- unknown filter
+Error: UnknownFilter("unknown_filter")
+
+-- syntax error with location
+Error: LexerError(("unclosed block tag", SourceSpan{start:10, end:42, line:2, column:1}))
+
+-- duplicate filter registration
+Error: DuplicateFilter("upper")
+
+-- missing include
+Error: MissingInclude("header")
 ```
 
 ## 开发 / Development
