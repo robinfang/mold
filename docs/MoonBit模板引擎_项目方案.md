@@ -99,6 +99,39 @@
 
 - **语法少一点，但每个语法都稳定**
 
+## 4. 当前实现状态（截至 2026-05-27）
+
+### 已完成
+
+- 变量插值 `{{ expr }}`，支持点路径访问
+- 条件分支 `{% if expr %}...{% else %}...{% endif %}`
+- 循环 `{% for item in items %}...{% endfor %}`
+- filter 链与 filter 参数（字符串、整数、路径变量）
+- 自定义 filter 注册（`Engine::register_filter`），不可覆盖内置 filter
+- 内置 filter：`upper`、`lower`、`trim`、`default`、`join`、`escape`
+- 比较表达式：`== != < <= > >=`
+- 布尔表达式：`and or not`，支持括号分组
+- 模板包含：`{% include "name" %}` + `Loader` 机制
+- 结构化错误定位（`SourceSpan`：start/end/line/column）
+- 错误类型：`LexerError`、`ParserError`、`MissingVariable`、`UnknownFilter`、`DuplicateFilter`、`MissingInclude`、`IncludeDepthExceeded`、`TypeMismatch`
+- `Template::parse` / `Template::render` 分层（parse once, render many）
+- `Engine` 层扩展点
+- 42 个测试 + benchmark
+- 3 个示例程序（hello / report / email）
+
+### 待实现
+
+- 空白控制（whitespace control）
+- Engine 级 autoescape 策略
+- `from_json` / `from_map` 上下文转换辅助
+- `Template::ast()` 调试接口
+
+### 刻意保留不做
+
+- 模板继承、宏系统、自定义标签 DSL
+- 异步模板、自动模板发现
+- 完整 HTML auto-escape 策略矩阵
+
 ## 五、上下文数据模型怎么设计
 
 这是项目的核心设计点之一。
@@ -166,11 +199,23 @@ let engine = @mold.Engine::new()
 engine.register_filter("slug", slug_filter)
 ```
 
-这样你就有三层：
+## 4. 模板包含 API
+
+```moonbit
+pub type Loader = (String) -> String?
+
+pub fn Engine::new() -> Engine
+pub fn Engine::with_loader(self : Engine, loader : Loader) -> Engine
+```
+
+模板中使用 `{% include "template_name" %}`，引擎通过 `Loader` 将模板名映射为源码字符串。被包含模板共享父模板上下文和作用域。
+
+这样你就有四层：
 
 - 快速函数式 API
 - 可复用的 `Template`
 - 可扩展的 `Engine`
+- 可组合的模板包含体系
 
 这个分层既专业，也不会太重。
 

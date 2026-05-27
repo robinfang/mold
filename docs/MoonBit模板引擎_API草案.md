@@ -77,14 +77,25 @@ pub fn Engine::register_filter(
   self : Engine,
   name : String,
   filter : Filter,
-) -> Unit
+) -> Unit raise Error
+pub fn Engine::with_loader(self : Engine, loader : Loader) -> Engine
 ```
+
+`Loader` 类型定义：
+
+```moonbit
+pub type Loader = (String) -> String?
+```
+
+当 `Engine` 持有 loader 时，模板中的 `{% include "name" %}` 会通过 loader 查找模板源码并渲染。被包含模板共享父模板的上下文和作用域。
 
 ## 八、过滤器接口
 
 ```moonbit
-pub type Filter = (Value, Array[Value]) -> Value raise Error
+pub type Filter = (Value, Array[Value]) -> Value
 ```
+
+过滤器不声明 raise，由引擎在调用时将错误转换为 `MoldError`。
 
 这样可以支持：
 
@@ -108,14 +119,16 @@ pub type Filter = (Value, Array[Value]) -> Value raise Error
 ## 十、错误模型
 
 ```moonbit
-pub suberror Error {
+pub suberror MoldError {
   LexerError((String, SourceSpan))
   ParserError((String, SourceSpan))
-  RenderError((String, SourceSpan?))
   UnknownFilter(String)
+  DuplicateFilter(String)
   MissingVariable(String)
+  MissingInclude(String)
+  IncludeDepthExceeded
   TypeMismatch((String, String))
-}
+} derive(Debug, Eq)
 ```
 
 其中 `SourceSpan` 建议至少包含：
@@ -178,6 +191,12 @@ let out = tpl.render(ctx)
 {{ expr | join(", ") }}
 ```
 
+### 包含
+
+```text
+{% include "template_name" %}
+```
+
 ## 十三、刻意不做的 API
 
 首版不要出现：
@@ -199,4 +218,5 @@ let out = tpl.render(ctx)
 
 - 第一屏就能讲清楚
 - 比赛首版完全够用
-- 未来还能自然扩展到 include / compile cache / SSR helper
+- include 和 custom filter 扩展点已落地
+- 未来还能自然扩展到 compile cache / whitespace control / autoescape
