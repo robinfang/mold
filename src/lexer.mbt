@@ -6,6 +6,7 @@ priv enum BlockToken {
   BlockEndIf(SourceSpan)
   BlockFor(String, String, SourceSpan)
   BlockEndFor(SourceSpan)
+  BlockInclude(String, SourceSpan)
 }
 
 ///|
@@ -24,6 +25,7 @@ fn lex(source : String) -> Array[Token] raise MoldError {
       BlockFor(item, iterable, span) =>
         tokens.push(BlockFor(item, iterable, span))
       BlockEndFor(span) => tokens.push(BlockEndFor(span))
+      BlockInclude(name, span) => tokens.push(BlockInclude(name, span))
     }
   } nobreak {
     tokens
@@ -95,6 +97,9 @@ fn parse_block_tag(
   } else if keyword == "for" {
     let (item, iterable) = parse_for_tag(tag, span)
     BlockFor(item, iterable, span)
+  } else if keyword == "include" {
+    let name = extract_include_name(tag, span)
+    BlockInclude(name, span)
   } else {
     raise LexerError(("unknown block tag: \{keyword}", span))
   }
@@ -157,6 +162,18 @@ fn extract_condition(tag : String) -> String {
     }
   }
   buf.to_string()
+}
+
+///|
+fn extract_include_name(
+  tag : String,
+  span : SourceSpan,
+) -> String raise MoldError {
+  let parts = tag.split("\"").collect()
+  if parts.length() < 3 {
+    raise LexerError(("invalid include tag, expected include \"name\"", span))
+  }
+  parts[1].to_owned()
 }
 
 ///|

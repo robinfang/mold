@@ -4,8 +4,9 @@ fn render_ast(
   ctx : Value,
   source : String,
   filters : Array[FilterEntry],
+  loader : Loader?,
 ) -> String raise MoldError {
-  render_ast_scoped(nodes, ctx, source, Map::from_array([]), filters)
+  render_ast_scoped(nodes, ctx, source, Map::from_array([]), filters, loader, 0)
 }
 
 ///|
@@ -15,6 +16,8 @@ fn render_ast_scoped(
   source : String,
   scope : Map[String, Value],
   filters : Array[FilterEntry],
+  loader : Loader?,
+  depth : Int,
 ) -> String raise MoldError {
   let builder = StringBuilder::new(size_hint=source.length())
   for node in nodes {
@@ -28,11 +31,15 @@ fn render_ast_scoped(
         let cond = eval_expr(cond_expr, ctx, scope, filters)
         if is_truthy(cond) {
           builder.write_string(
-            render_ast_scoped(then_nodes, ctx, source, scope, filters),
+            render_ast_scoped(
+              then_nodes, ctx, source, scope, filters, loader, depth,
+            ),
           )
         } else {
           builder.write_string(
-            render_ast_scoped(else_nodes, ctx, source, scope, filters),
+            render_ast_scoped(
+              else_nodes, ctx, source, scope, filters, loader, depth,
+            ),
           )
         }
       }
@@ -45,10 +52,39 @@ fn render_ast_scoped(
                 (item_name, item),
               ])
               builder.write_string(
-                render_ast_scoped(body, ctx, source, item_scope, filters),
+                render_ast_scoped(
+                  body, ctx, source, item_scope, filters, loader, depth,
+                ),
               )
             }
           _ => raise TypeMismatch(("cannot iterate", "array"))
+        }
+      }
+      Include(name) => {
+        if depth >= 10 {
+          raise IncludeDepthExceeded
+        }
+        match loader {
+          None => raise MissingInclude(name)
+          Some(load) =>
+            match load(name) {
+              None => raise MissingInclude(name)
+              Some(included_source) => {
+                let included_tokens = lex(included_source)
+                let included_nodes = parse(included_tokens)
+                builder.write_string(
+                  render_ast_scoped(
+                    included_nodes,
+                    ctx,
+                    included_source,
+                    scope,
+                    filters,
+                    loader,
+                    depth + 1,
+                  ),
+                )
+              }
+            }
         }
       }
     }

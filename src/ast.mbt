@@ -4,6 +4,7 @@ pub enum Node {
   Interpolation(Expr)
   If(Expr, Array[Node], Array[Node])
   For(String, Expr, Array[Node])
+  Include(String)
 }
 
 ///|

@@ -459,6 +459,90 @@ test "unknown filter raises dedicated error" {
 }
 
 ///|
+test "include renders included template" {
+  let engine = @mold.Engine::new().with_loader(fn(name) {
+    match name {
+      "header" => Some("Header: {{ title }}")
+      _ => None
+    }
+  })
+  let output = engine.render(
+    "{% include \"header\" %}\nBody",
+    @mold.object({ "title": @mold.string("My Page") }),
+  )
+  assert_eq(output, "Header: My Page\nBody")
+}
+
+///|
+test "include shares parent context" {
+  let engine = @mold.Engine::new().with_loader(fn(name) {
+    match name {
+      "item" => Some("- {{ item.name }}")
+      _ => None
+    }
+  })
+  let output = engine.render(
+    "{% for item in items %}{% include \"item\" %}\n{% endfor %}",
+    @mold.object({
+      "items": @mold.array([
+        @mold.object({ "name": @mold.string("a") }),
+        @mold.object({ "name": @mold.string("b") }),
+      ]),
+    }),
+  )
+  assert_eq(output, "- a\n- b\n")
+}
+
+///|
+test "include missing template raises error" {
+  let engine = @mold.Engine::new().with_loader(fn(_name) { None })
+  let result = try? engine.render("{% include \"missing\" %}", @mold.null())
+  match result {
+    Err(@mold.MissingInclude(name)) => assert_eq(name, "missing")
+    Ok(_) => fail("expected missing include error")
+    _ => fail("unexpected error variant")
+  }
+}
+
+///|
+test "include without loader raises error" {
+  let result = try? @mold.render("{% include \"header\" %}", @mold.null())
+  match result {
+    Err(@mold.MissingInclude(_)) => ()
+    Ok(_) => fail("expected missing include error")
+    _ => fail("unexpected error variant")
+  }
+}
+
+///|
+test "nested include within depth limit" {
+  let engine = @mold.Engine::new().with_loader(fn(name) {
+    match name {
+      "outer" => Some("outer[{% include \"inner\" %}]")
+      "inner" => Some("inner")
+      _ => None
+    }
+  })
+  let output = engine.render("{% include \"outer\" %}", @mold.null())
+  assert_eq(output, "outer[inner]")
+}
+
+///|
+test "include preserves filters of parent engine" {
+  let engine = @mold.Engine::new().with_loader(fn(name) {
+    match name {
+      "greeting" => Some("Hi, {{ name | upper }}")
+      _ => None
+    }
+  })
+  let output = engine.render(
+    "{% include \"greeting\" %}",
+    @mold.object({ "name": @mold.string("alice") }),
+  )
+  assert_eq(output, "Hi, ALICE")
+}
+
+///|
 test (b : @bench.T) {
   let src = "{% for item in items %}{{ item }}{% endfor %}{% if flag %}yes{% endif %}"
   let ctx_obj = @mold.object({

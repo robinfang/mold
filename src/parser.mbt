@@ -91,6 +91,10 @@ fn parse_nodes(
       BlockElse(span) => raise ParserError(("unexpected else", span))
       BlockEndIf(span) => raise ParserError(("unexpected endif", span))
       BlockEndFor(span) => raise ParserError(("unexpected endfor", span))
+      BlockInclude(name, _) => {
+        nodes.push(Include(name))
+        i = i + 1
+      }
     }
   } nobreak {
     (nodes, i)
@@ -119,6 +123,10 @@ fn parse_nodes_until(
       BlockEndFor(_) => break (nodes, i)
       BlockIf(_, _) => break (nodes, i)
       BlockFor(_, _, _) => break (nodes, i)
+      BlockInclude(name, _) => {
+        nodes.push(Include(name))
+        i = i + 1
+      }
     }
   } nobreak {
     (nodes, i)

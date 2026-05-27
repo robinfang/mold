@@ -35,6 +35,7 @@ MoonBit still lacks a focused template engine with clean APIs, solid tests, and 
 - 结构化错误类型与源码位置 / structured errors with source spans
 - 预编译模板 / parse once, render many times
 - `Engine::register_filter(...)` 自定义过滤器 / custom filter registration via `Engine::register_filter(...)`
+- `{% include "template_name" %}` 模板包含 / template inclusion via `{% include "template_name" %}`
 
 ## 示例 / Example
 
@@ -99,6 +100,15 @@ pub fn Engine::render(self : Engine, source : String, ctx : Value) -> String rai
 pub type Filter = (Value, Array[Value]) -> Value
 ```
 
+### 加载器 / Loader
+
+```moonbit
+pub type Loader = (String) -> String?
+
+pub fn Engine::new() -> Engine
+pub fn Engine::with_loader(self : Engine, loader : Loader) -> Engine
+```
+
 ### 运行时值模型 / Runtime Value Model
 
 ```moonbit
@@ -137,7 +147,6 @@ Current benchmarks already show that parsing once and rendering many times is si
 - 不支持宏系统 / no macro system
 - 不支持异步模板 / no async templates
 - 不支持自动模板目录扫描 / no automatic template discovery
-- 暂不支持 `include` / no `include` yet
 
 ## 发布计划 / Publishing Plan
 

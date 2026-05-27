@@ -13,6 +13,8 @@ pub suberror MoldError {
   UnknownFilter(String)
   DuplicateFilter(String)
   MissingVariable(String)
+  MissingInclude(String)
+  IncludeDepthExceeded
   TypeMismatch((String, String))
 } derive(Debug, Eq)
 

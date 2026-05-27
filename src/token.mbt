@@ -7,6 +7,7 @@ priv enum Token {
   BlockEndIf(SourceSpan)
   BlockFor(String, String, SourceSpan)
   BlockEndFor(SourceSpan)
+  BlockInclude(String, SourceSpan)
 }
 
 ///|
@@ -19,5 +20,6 @@ fn token_span(token : Token) -> SourceSpan noraise {
     BlockEndIf(span) => span
     BlockFor(_, _, span) => span
     BlockEndFor(span) => span
+    BlockInclude(_, span) => span
   }
 }
