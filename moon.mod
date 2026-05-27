@@ -4,7 +4,7 @@ version = "0.1.0"
 
 readme = "README.md"
 
-repository = "git@code.gitlink.org.cn:robinfang/mold.git"
+repository = "https://github.com/robinfang/mold"
 
 license = "Apache-2.0"
 

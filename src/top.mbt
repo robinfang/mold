@@ -36,7 +36,14 @@ pub fn Template::parse(source : String) -> Template raise MoldError {
 
 ///|
 pub fn Template::render(self : Template, ctx : Value) -> String raise MoldError {
-  render_ast(self.ast, ctx, self.source, self.filters, self.loader, self.autoescape)
+  render_ast(
+    self.ast,
+    ctx,
+    self.source,
+    self.filters,
+    self.loader,
+    self.autoescape,
+  )
 }
 
 ///|
@@ -51,16 +58,27 @@ pub fn Template::ast(self : Template) -> Array[Node] noraise {
 
 ///|
 pub fn Engine::new() -> Engine noraise {
-  Engine::{ filters: default_filter_registry(), loader: None, autoescape: false }
+  Engine::{
+    filters: default_filter_registry(),
+    loader: None,
+    autoescape: false,
+  }
 }
 
 ///|
 pub fn Engine::with_loader(self : Engine, loader : Loader) -> Engine noraise {
-  Engine::{ filters: self.filters, loader: Some(loader), autoescape: self.autoescape }
+  Engine::{
+    filters: self.filters,
+    loader: Some(loader),
+    autoescape: self.autoescape,
+  }
 }
 
 ///|
-pub fn Engine::with_autoescape(self : Engine, autoescape : Bool) -> Engine noraise {
+pub fn Engine::with_autoescape(
+  self : Engine,
+  autoescape : Bool,
+) -> Engine noraise {
   Engine::{ filters: self.filters, loader: self.loader, autoescape }
 }
 

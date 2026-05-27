@@ -114,18 +114,21 @@
 - 模板包含：`{% include "name" %}` + `Loader` 机制
 - 空白控制：`{%-` / `-%}` 和 `{{-` / `-}}`
 - 模板注释：`{# ... #}`
+- Engine 级 autoescape 策略 + `| safe` filter
+- `Template::ast()` 调试接口
+- `from_json` / `from_map` 上下文转换辅助
 - 结构化错误定位（`SourceSpan`：start/end/line/column）
 - 错误类型：`LexerError`、`ParserError`、`MissingVariable`、`UnknownFilter`、`DuplicateFilter`、`MissingInclude`、`IncludeDepthExceeded`、`TypeMismatch`
 - `Template::parse` / `Template::render` 分层（parse once, render many）
 - `Engine` 层扩展点
-- 42 个测试 + benchmark
+- 42 个测试 → 已增至 66 个 + benchmark
 - 3 个示例程序（hello / report / email）
 
 ### 待实现
 
-- Engine 级 autoescape 策略
-- `from_json` / `from_map` 上下文转换辅助
-- `Template::ast()` 调试接口
+- 文件系统 loader
+- 模板编译缓存
+- missing variable 策略可配置
 
 ### 刻意保留不做
 

@@ -9,11 +9,26 @@
 - GitHub: <https://github.com/robinfang/mold>
 - GitLink: <https://www.gitlink.org.cn/robinfang/mold>
 
+## 安装 / Installation
+
+```text
+moon add robinfang/mold
+```
+
 ## 项目简介 / Overview
 
 MoonBit 生态目前缺少一个边界清晰、API 干净、可测试可复用的模板引擎。`mold` 的目标是填补这个空白，提供从模板解析、抽象语法树构建、上下文求值到最终渲染输出的完整链路。
 
 MoonBit still lacks a focused template engine with clean APIs, solid tests, and a reusable runtime model. `mold` aims to fill that gap with a complete pipeline from template parsing and AST construction to context evaluation and final rendering.
+
+## 快速开始 / Quick Start
+
+```moonbit
+let output = @mold.render(
+  "Hello, {{ name }}!",
+  @mold.object({ "name": @mold.string("World") }),
+)
+```
 
 ## 当前能力 / Current Features
 
@@ -74,6 +89,44 @@ let out = tpl.render(ctx) catch {
   - 循环、条件分支与嵌套对象 / loops, conditionals, and nested objects
 - `src/examples/email/`
   - 更接近真实业务邮件模板 / a more realistic email template example
+
+## 模板组合 / Template Composition
+
+通过 `Engine` + `Loader` 组合多个模板：
+
+```moonbit
+let engine = @mold.Engine::new().with_loader(fn(name) {
+  match name {
+    "header" => Some("Header: {{ title }}\n")
+    "footer" => Some("Footer: {{ company }}")
+    _ => None
+  }
+})
+
+let output = engine.render(
+  "{% include \"header\" %}\nContent goes here.\n{% include \"footer\" %}",
+  @mold.object({
+    "title": @mold.string("My Report"),
+    "company": @mold.string("ACME Corp"),
+  }),
+)
+```
+
+## HTML 安全 / HTML Safety
+
+默认不启用自动转义，适合通用文本场景。对 HTML 输出可显式启用：
+
+```moonbit
+let engine = @mold.Engine::new().with_autoescape(true)
+
+let output = engine.render(
+  "{{ user_input }}",
+  @mold.object({ "user_input": @mold.string("<script>alert(1)</script>") }),
+)
+// 输出: &lt;script&gt;alert(1)&lt;/script&gt;
+```
+
+如需局部输出原始 HTML：`{{ html_content | safe }}`。
 
 ## API
 
@@ -137,21 +190,31 @@ pub fn from_map(map : Map[String, Value]) -> Value
 
 ### 错误示例 / Error Diagnostics
 
+`mold` 的所有错误都包含位置信息，便于快速定位模板问题。
+
+模板输入 `{{ missing }}`：
 ```text
--- missing variable
-Error: MissingVariable("missing variable: user.age")
+Error: MissingVariable("missing variable: missing")
+```
 
--- unknown filter
-Error: UnknownFilter("unknown_filter")
+模板输入 `{{ name | unknown }}`：
+```text
+Error: UnknownFilter("unknown")
+```
 
--- syntax error with location
-Error: LexerError(("unclosed block tag", SourceSpan{start:10, end:42, line:2, column:1}))
+模板输入 `{% include "no_such_tpl" %}` 且 loader 找不到：
+```text
+Error: MissingInclude("no_such_tpl")
+```
 
--- duplicate filter registration
+模板输入 `{% if %}`（条件为空）：
+```text
+Error: LexerError(("empty if condition", SourceSpan{start:0, end:6, line:1, column:1}))
+```
+
+在同一个 Engine 上重复注册同名 filter：
+```text
 Error: DuplicateFilter("upper")
-
--- missing include
-Error: MissingInclude("header")
 ```
 
 ## 开发 / Development

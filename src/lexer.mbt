@@ -57,8 +57,7 @@ fn lex_blocks(source : String) -> Array[BlockToken] raise MoldError {
     let span = make_span(source, block_start, block_end)
 
     let strip_before = raw_tag.length() > 0 && raw_tag.code_unit_at(0) == '-'
-    let strip_after =
-      raw_tag.length() > 0 &&
+    let strip_after = raw_tag.length() > 0 &&
       raw_tag.code_unit_at(raw_tag.length() - 1) == '-'
 
     let tag = clean_strip_markers(raw_tag).trim().to_owned()
@@ -233,10 +232,8 @@ fn lex_interpolations(
     let interp_end = offset + raw_expr.length() + 2
     let span = make_span(full_source, interp_start, interp_end)
 
-    let strip_before =
-      raw_expr.length() > 0 && raw_expr.code_unit_at(0) == '-'
-    let strip_after =
-      raw_expr.length() > 0 &&
+    let strip_before = raw_expr.length() > 0 && raw_expr.code_unit_at(0) == '-'
+    let strip_after = raw_expr.length() > 0 &&
       raw_expr.code_unit_at(raw_expr.length() - 1) == '-'
 
     let expr = clean_strip_markers(raw_expr).trim().to_owned()

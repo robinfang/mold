@@ -8,7 +8,14 @@ fn render_ast(
   autoescape : Bool,
 ) -> String raise MoldError {
   render_ast_scoped(
-    nodes, ctx, source, Map::from_array([]), filters, loader, 0, autoescape,
+    nodes,
+    ctx,
+    source,
+    Map::from_array([]),
+    filters,
+    loader,
+    0,
+    autoescape,
   )
 }
 

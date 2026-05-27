@@ -589,10 +589,7 @@ test "combined whitespace control on both sides" {
 
 ///|
 test "{# comment #} is removed from output" {
-  let output = @mold.render(
-    "hello{# this is a comment #}world",
-    @mold.null(),
-  )
+  let output = @mold.render("hello{# this is a comment #}world", @mold.null())
   assert_eq(output, "helloworld")
 }
 
@@ -672,12 +669,11 @@ test "Template.ast returns parsed AST" {
 
 ///|
 test "from_json converts json to Value" {
-  let json = @json.parse("{\"name\": \"Alice\", \"age\": 30, \"active\": true, \"scores\": [1, 2, 3]}")
-  let ctx = @mold.from_json(json)
-  let output = @mold.render(
-    "{{ name }} is {{ age }}",
-    ctx,
+  let json = @json.parse(
+    "{\"name\": \"Alice\", \"age\": 30, \"active\": true, \"scores\": [1, 2, 3]}",
   )
+  let ctx = @mold.from_json(json)
+  let output = @mold.render("{{ name }} is {{ age }}", ctx)
   assert_eq(output, "Alice is 30")
 }
 
@@ -685,20 +681,18 @@ test "from_json converts json to Value" {
 test "from_json handles null and bool" {
   let json = @json.parse("{\"x\": null, \"y\": false, \"z\": true}")
   let ctx = @mold.from_json(json)
-  let output = @mold.render(
-    "{{ x }}|{{ y }}|{{ z }}",
-    ctx,
-  )
+  let output = @mold.render("{{ x }}|{{ y }}|{{ z }}", ctx)
   assert_eq(output, "|false|true")
 }
 
 ///|
 test "from_json handles nested objects" {
-  let json = @json.parse("{\"user\": {\"name\": \"Bob\", \"scores\": [10, 20]}}")
+  let json = @json.parse(
+    "{\"user\": {\"name\": \"Bob\", \"scores\": [10, 20]}}",
+  )
   let ctx = @mold.from_json(json)
   let output = @mold.render(
-    "{{ user.name }}: {{ user.scores | join(\", \") }}",
-    ctx,
+    "{{ user.name }}: {{ user.scores | join(\", \") }}", ctx,
   )
   assert_eq(output, "Bob: 10, 20")
 }

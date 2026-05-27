@@ -156,12 +156,11 @@ fn filter_join(value : Value, args : Array[Value]) -> Value raise MoldError {
           Int(n) => buf.write_string(n.to_string())
           Float(d) => buf.write_string(d.to_string())
           Bool(b) => buf.write_string(if b { "true" } else { "false" })
-          Safe(inner) => {
+          Safe(inner) =>
             match inner {
               String(s) => buf.write_string(s)
               _ => buf.write_string("")
             }
-          }
           _ => buf.write_string("")
         }
       }
@@ -197,4 +196,3 @@ fn escape_html(text : String) -> String {
 fn filter_safe(value : Value, _args : Array[Value]) -> Value noraise {
   Safe(value)
 }
-

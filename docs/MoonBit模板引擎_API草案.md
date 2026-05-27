@@ -37,6 +37,8 @@ pub fn float(v : Double) -> Value
 pub fn string(v : String) -> Value
 pub fn array(v : Array[Value]) -> Value
 pub fn object(v : Map[String, Value]) -> Value
+pub fn from_json(json : Json) -> Value
+pub fn from_map(map : Map[String, Value]) -> Value
 ```
 
 目标不是省这几个函数，而是让 README 示例更自然。
@@ -48,7 +50,7 @@ pub struct Template
 
 pub fn Template::parse(source : String) -> Template raise Error
 pub fn Template::render(self : Template, ctx : Value) -> String raise Error
-pub fn Template::ast(self : Template) -> Ast
+pub fn Template::ast(self : Template) -> Array[Node]
 ```
 
 说明：
@@ -113,6 +115,7 @@ pub type Filter = (Value, Array[Value]) -> Value
 - `default`
 - `join`
 - `escape`
+- `safe`
 
 这已经足够像“正式模板引擎”了。
 
