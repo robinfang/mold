@@ -112,6 +112,8 @@
 - 比较表达式：`== != < <= > >=`
 - 布尔表达式：`and or not`，支持括号分组
 - 模板包含：`{% include "name" %}` + `Loader` 机制
+- 空白控制：`{%-` / `-%}` 和 `{{-` / `-}}`
+- 模板注释：`{# ... #}`
 - 结构化错误定位（`SourceSpan`：start/end/line/column）
 - 错误类型：`LexerError`、`ParserError`、`MissingVariable`、`UnknownFilter`、`DuplicateFilter`、`MissingInclude`、`IncludeDepthExceeded`、`TypeMismatch`
 - `Template::parse` / `Template::render` 分层（parse once, render many）
@@ -121,7 +123,6 @@
 
 ### 待实现
 
-- 空白控制（whitespace control）
 - Engine 级 autoescape 策略
 - `from_json` / `from_map` 上下文转换辅助
 - `Template::ast()` 调试接口
