@@ -62,6 +62,7 @@ These three workflows map directly to the overall structure of `mold`: top-level
 - Engine 指南 / Engine guide: [`docs/engine-guide.md`](docs/engine-guide.md)
 - HTML 安全 / HTML safety: [`docs/html-safety.md`](docs/html-safety.md)
 - 错误排查 / Errors: [`docs/errors.md`](docs/errors.md)
+- WASM 导出 / WASM export: [`docs/wasm-export.md`](docs/wasm-export.md)
 - Recipes / Recipes:
   - [`docs/recipes/report-generation.md`](docs/recipes/report-generation.md)
   - [`docs/recipes/email-template.md`](docs/recipes/email-template.md)
@@ -118,6 +119,7 @@ moon run src/examples/from_json
   - `default(...)`
   - `join(...)`
   - `escape`
+  - `length`
   - `safe`
 - 比较与布尔表达式 / comparison and boolean expressions:
   - `== != < <= > >=`
@@ -197,9 +199,9 @@ pub fn Engine::render(self : Engine, source : String, ctx : Value) -> String rai
 
 ## 发布状态 / Release Status
 
-`mold` 已发布到 `mooncakes.io`，当前版本为 `0.1.1`。
+`mold` 已发布到 `mooncakes.io`，当前版本为 `0.2.0`。
 
-`mold` is now published on `mooncakes.io`, and the current version is `0.1.1`.
+`mold` is now published on `mooncakes.io`, and the current version is `0.2.0`.
 
 ## 开源协议 / License
 

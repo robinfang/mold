@@ -130,6 +130,34 @@ enabled
 
 `for` 同样支持嵌套，也可以在循环体内继续写 `if`。
 
+### 循环元变量 `loop`
+
+在 `for` 循环体内，`mold` 自动注入一个 `loop` 对象，提供当前迭代的元信息：
+
+| 属性 | 说明 | 示例值 |
+|---|---|---|
+| `loop.index` | 1-based 序号 | 1, 2, 3 |
+| `loop.index0` | 0-based 序号 | 0, 1, 2 |
+| `loop.first` | 是否为第一个元素 | true, false |
+| `loop.last` | 是否为最后一个元素 | true, false |
+| `loop.length` | 数组总长度 | 3 |
+
+示例：
+
+```text
+{% for item in items %}
+{{ loop.index }}. {{ item }}{% if not loop.last %}, {% endif %}
+{% endfor %}
+```
+
+假设 `items` 是 `["a", "b"]`，输出：
+
+```text
+1. a, 2. b
+```
+
+嵌套 `for` 中，每个循环拥有独立的 `loop` 作用域，互不干扰。
+
 ## 6. filters
 
 模板：
@@ -148,6 +176,7 @@ enabled
 - `default(...)`
 - `join(...)`
 - `escape`
+- `length`
 - `safe`
 
 ## 7. 比较与布尔表达式
@@ -265,6 +294,9 @@ let engine = @mold.Engine::new().with_autoescape(true)
 - [`src/examples/email/`](../src/examples/email/)
 - [`src/examples/include_loader/`](../src/examples/include_loader/)
 - [`src/examples/html_safe/`](../src/examples/html_safe/)
+- [`src/examples/custom_filter/`](../src/examples/custom_filter/)
+- [`src/examples/from_json/`](../src/examples/from_json/)
+- [`src/examples/site/`](../src/examples/site/)
 
 ## 15. 继续阅读
 

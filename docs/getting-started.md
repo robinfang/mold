@@ -103,6 +103,7 @@ moon run src/examples/include_loader
 moon run src/examples/html_safe
 moon run src/examples/custom_filter
 moon run src/examples/from_json
+moon run src/examples/site
 ```
 
 各示例用途：
@@ -114,6 +115,7 @@ moon run src/examples/from_json
 - `html_safe`: HTML 输出与 `safe`
 - `custom_filter`: 自定义 filter 注册
 - `from_json`: JSON 到模板上下文的转换
+- `site`: 静态网站批量渲染
 
 ## 上下文值模型
 

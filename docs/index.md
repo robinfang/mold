@@ -41,6 +41,8 @@
   - 默认行为、autoescape、`| safe`、推荐实践
 - [错误排查](errors.md)
   - 错误分类、常见触发方式、排查顺序
+- [WASM 导出](wasm-export.md)
+  - 构建、配置、JS 集成、返回格式
 - Recipes
   - [报告生成](recipes/report-generation.md)
   - [邮件模板](recipes/email-template.md)
