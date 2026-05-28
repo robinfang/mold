@@ -45,6 +45,7 @@
   - [报告生成](recipes/report-generation.md)
   - [邮件模板](recipes/email-template.md)
   - [JSON 输入](recipes/json-input.md)
+  - [静态网站](recipes/site-generation.md)
 
 如果只想快速判断 `mold` 是否适合你的场景，先看 `README.md` 和 `getting-started.md` 即可。
 
@@ -64,6 +65,8 @@
   - `Engine::register_filter(...)`
 - [`src/examples/from_json/`](../src/examples/from_json/)
   - `from_json(...)`
+- [`src/examples/site/`](../src/examples/site/)
+  - 静态网站批量渲染
 
 ## 当前范围
 
@@ -83,10 +86,10 @@
 
 ## 近期会继续补充的文档
 
-下一步会继续补这些内容，仍保持按主题拆分，不回到单页堆叠的结构：
+下一步会继续补这些内容，仍保持按主题拆分：
 
-- 面向场景的 recipes
 - 更多与文档一一对应的 examples
-- 更细的 API 说明与边界说明
+- 更细的 API 边界说明
+- 文件系统 loader 接入示例
 
-`Engine`、HTML 安全和错误排查这三篇核心进阶文档已经补齐，下一步重点会转向 recipes 和更完整的 examples 体系。
+`Engine`、HTML 安全、错误排查和 recipes 这几篇已经补齐，当前文档体系覆盖了从快速上手到进阶使用的主要路径。

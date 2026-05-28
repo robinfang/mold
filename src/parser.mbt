@@ -9,6 +9,7 @@ priv enum ExprToken {
   Ident(String)
   StringLiteral(String)
   IntLiteral(Int)
+  FloatLiteral(Double)
   And
   Or
   Not
@@ -268,9 +269,16 @@ fn parse_primary_tokens(
     raise ParserError(("expected expression", span))
   }
   match tokens[start] {
-    ExprToken::Ident(_) => parse_path_tokens(tokens, start, span)
+    ExprToken::Ident(name) =>
+      match name {
+        "true" => (BoolLiteral(true), start + 1)
+        "false" => (BoolLiteral(false), start + 1)
+        "null" => (NullLiteral, start + 1)
+        _ => parse_path_tokens(tokens, start, span)
+      }
     ExprToken::StringLiteral(text) => (StringLiteral(text), start + 1)
     ExprToken::IntLiteral(value) => (IntLiteral(value), start + 1)
+    ExprToken::FloatLiteral(value) => (FloatLiteral(value), start + 1)
     ExprToken::LParen => {
       let (expr, next) = parse_or_tokens(tokens, start + 1, span)
       if next >= tokens.length() || !is_rparen(tokens[next]) {
@@ -378,8 +386,17 @@ fn tokenize_expr(
       continue
     }
     if is_int_start(chars, i) {
-      let (value, next) = read_int_literal(chars, i)
-      tokens.push(ExprToken::IntLiteral(value))
+      let (neg, whole, has_frac, frac_val, next) = read_number_literal(chars, i)
+      if has_frac {
+        let int_part = whole.to_double()
+        let frac_part = frac_val.to_double() / pow10_int(count_digits(frac_val))
+        let magnitude = int_part + frac_part
+        let value = if neg { -magnitude } else { magnitude }
+        tokens.push(ExprToken::FloatLiteral(value))
+      } else {
+        let value = if neg { -whole } else { whole }
+        tokens.push(ExprToken::IntLiteral(value))
+      }
       i = next
       continue
     }
@@ -453,25 +470,71 @@ fn read_string_literal(
 }
 
 ///|
-fn read_int_literal(chars : Array[Char], start : Int) -> (Int, Int) {
+fn read_number_literal(
+  chars : Array[Char],
+  start : Int,
+) -> (Bool, Int, Bool, Int, Int) {
   let mut i = start
   let mut negative = false
   if chars[i] == '-' {
     negative = true
     i = i + 1
   }
-  let mut value = 0
+  let mut whole = 0
   while i < chars.length() {
     let ch = chars[i]
     if ch >= '0' && ch <= '9' {
-      value = value * 10 + (ch.to_int() - '0'.to_int())
+      whole = whole * 10 + (ch.to_int() - '0'.to_int())
       i = i + 1
     } else {
-      return (if negative { -value } else { value }, i)
+      break
     }
-  } nobreak {
-    (if negative { -value } else { value }, i)
   }
+  if i < chars.length() &&
+    chars[i] == '.' &&
+    i + 1 < chars.length() &&
+    chars[i + 1] >= '0' &&
+    chars[i + 1] <= '9' {
+    i = i + 1
+    let mut frac = 0
+    let mut digits = 0
+    while i < chars.length() {
+      let fc = chars[i]
+      if fc >= '0' && fc <= '9' {
+        frac = frac * 10 + (fc.to_int() - '0'.to_int())
+        digits = digits + 1
+        i = i + 1
+      } else {
+        break
+      }
+    }
+    (negative, whole, true, frac, i)
+  } else {
+    (negative, whole, false, 0, i)
+  }
+}
+
+///|
+fn count_digits(value : Int) -> Int {
+  if value == 0 {
+    return 1
+  }
+  let mut n = value
+  let mut count = 0
+  while n > 0 {
+    n = n / 10
+    count = count + 1
+  }
+  count
+}
+
+///|
+fn pow10_int(exp : Int) -> Double {
+  let mut result = 1.0
+  for _i in 0..<exp {
+    result = result * 10.0
+  }
+  result
 }
 
 ///|

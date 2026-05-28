@@ -165,6 +165,8 @@ LexerError(("empty if condition", SourceSpan{...}))
 - 先确认是否使用了 `Engine::with_loader(...)`
 - 再确认模板名与 `Loader` 的分支匹配
 
+注意：如果你使用 `Engine::parse(...)`，`MissingInclude` 和 include 内部的词法/语法错误可能在 parse 阶段就会提前抛出，而不是等到 `render(...)` 时才出现。这对于“parse once, render many”的使用方式来说，意味着错误会更早被定位。
+
 ### `IncludeDepthExceeded`
 
 这类错误说明 include 链过深，通常是递归包含导致的。

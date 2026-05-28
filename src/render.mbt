@@ -70,10 +70,22 @@ fn render_ast_scoped(
       For(item_name, iterable_expr, body) => {
         let iterable = eval_expr(iterable_expr, ctx, scope, filters)
         match iterable {
-          Array(items) =>
+          Array(items) => {
+            let len = items.length()
+            let mut i = 0
             for item in items {
+              let loop_obj = Object(
+                Map::from_array([
+                  ("index", Int(i + 1)),
+                  ("index0", Int(i)),
+                  ("first", Bool(i == 0)),
+                  ("last", Bool(i == len - 1)),
+                  ("length", Int(len)),
+                ]),
+              )
               let item_scope : Map[String, Value] = Map::from_array([
                 (item_name, item),
+                ("loop", loop_obj),
               ])
               builder.write_string(
                 render_ast_scoped(
@@ -81,7 +93,9 @@ fn render_ast_scoped(
                   autoescape,
                 ),
               )
+              i = i + 1
             }
+          }
           _ => raise TypeMismatch(("cannot iterate", "array"))
         }
       }
@@ -151,6 +165,9 @@ fn eval_expr(
     }
     StringLiteral(text) => String(text)
     IntLiteral(value) => Int(value)
+    FloatLiteral(value) => Float(value)
+    BoolLiteral(value) => Bool(value)
+    NullLiteral => Null
     Unary(UnaryOp::Not, inner) =>
       Bool(!is_truthy(eval_expr(inner, ctx, scope, filters)))
     FilterCall(base, name, args) => {

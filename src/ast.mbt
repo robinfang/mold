@@ -29,6 +29,9 @@ pub enum Expr {
   Path(Array[String])
   StringLiteral(String)
   IntLiteral(Int)
+  FloatLiteral(Double)
+  BoolLiteral(Bool)
+  NullLiteral
   FilterCall(Expr, String, Array[Expr])
   Binary(Expr, BinaryOp, Expr)
   Unary(UnaryOp, Expr)

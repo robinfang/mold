@@ -88,6 +88,19 @@ enabled
 
 `mold` 支持嵌套控制块，因此 `if` 里可以继续写 `if` 或 `for`。
 
+表达式内也支持字面量：
+
+- `true` / `false`
+- `null`
+- 整数和浮点数，例如 `42`、`3.14`、`-0.5`
+
+示例：
+
+```text
+{% if active == true %}enabled{% endif %}
+{{ price | default(0.0) }}
+```
+
 ## 5. 循环
 
 模板：

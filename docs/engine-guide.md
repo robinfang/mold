@@ -170,6 +170,11 @@ let second = tpl.render(@mold.object({ "title": @mold.string("B") }))
 
 这样模板在 parse 阶段就会携带当前 `Engine` 的 filters、loader 和 autoescape 配置。
 
+另外，`Engine::parse(...)` 在解析主模板的同时，也会提前编译所有 `{% include %}` 引用的子模板。后续 `render(...)` 时会直接复用已编译的 AST，不再重复调用 loader 或重新解析。这意味着：
+
+- 同一个 `Template` 重复渲染时，loader 只会被调用一次
+- include 不存在、include 递归过深等问题可能会在 parse 阶段提前暴露
+
 ## 7. 什么时候不要上来就用 `Engine`
 
 如果你只是：

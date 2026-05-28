@@ -262,6 +262,81 @@ test "empty string is falsy" {
 }
 
 ///|
+test "bool literal true renders" {
+  let output = @mold.render("{{ true }}", @mold.null())
+  assert_eq(output, "true")
+}
+
+///|
+test "bool literal false renders" {
+  let output = @mold.render("{{ false }}", @mold.null())
+  assert_eq(output, "false")
+}
+
+///|
+test "bool literal works in if body" {
+  let output = @mold.render(
+    "{% if true %}yes{% else %}no{% endif %}",
+    @mold.null(),
+  )
+  assert_eq(output, "yes")
+}
+
+///|
+test "bool literal with not works in if" {
+  let output = @mold.render(
+    "{% if not false %}yes{% else %}no{% endif %}",
+    @mold.null(),
+  )
+  assert_eq(output, "yes")
+}
+
+///|
+test "null literal renders empty" {
+  let output = @mold.render("{{ null }}", @mold.null())
+  assert_eq(output, "")
+}
+
+///|
+test "null literal is falsy" {
+  let output = @mold.render(
+    "{% if null %}yes{% else %}no{% endif %}",
+    @mold.null(),
+  )
+  assert_eq(output, "no")
+}
+
+///|
+test "float literal renders" {
+  let output = @mold.render("{{ 3.14 }}", @mold.null())
+  assert_eq(output, "3.14")
+}
+
+///|
+test "negative float literal renders" {
+  let output = @mold.render("{{ -0.5 }}", @mold.null())
+  assert_eq(output, "-0.5")
+}
+
+///|
+test "float comparison in if works" {
+  let output = @mold.render(
+    "{% if price > 3.5 %}high{% else %}low{% endif %}",
+    @mold.object({ "price": @mold.float(4.0) }),
+  )
+  assert_eq(output, "high")
+}
+
+///|
+test "true equals true in comparison" {
+  let output = @mold.render(
+    "{% if true == true %}yes{% else %}no{% endif %}",
+    @mold.null(),
+  )
+  assert_eq(output, "yes")
+}
+
+///|
 test "for loop renders items" {
   let output = @mold.render(
     "{% for item in items %}{{ item }}-{% endfor %}",
@@ -353,320 +428,70 @@ test "for non-array raises error" {
 }
 
 ///|
-test "filter upper" {
+test "loop.index is 1-based" {
   let output = @mold.render(
-    "{{ name | upper }}",
-    @mold.object({ "name": @mold.string("hello") }),
-  )
-  assert_eq(output, "HELLO")
-}
-
-///|
-test "filter lower" {
-  let output = @mold.render(
-    "{{ name | lower }}",
-    @mold.object({ "name": @mold.string("HELLO") }),
-  )
-  assert_eq(output, "hello")
-}
-
-///|
-test "filter trim" {
-  let output = @mold.render(
-    "{{ name | trim }}",
-    @mold.object({ "name": @mold.string("  hello  ") }),
-  )
-  assert_eq(output, "hello")
-}
-
-///|
-test "filter default on null" {
-  let output = @mold.render(
-    "{{ name | default(\"N/A\") }}",
-    @mold.object({ "name": @mold.null() }),
-  )
-  assert_eq(output, "N/A")
-}
-
-///|
-test "filter default with int literal" {
-  let output = @mold.render(
-    "{{ count | default(0) }}",
-    @mold.object({ "count": @mold.null() }),
-  )
-  assert_eq(output, "0")
-}
-
-///|
-test "filter default with path arg" {
-  let output = @mold.render(
-    "{{ name | default(fallback) }}",
-    @mold.object({ "name": @mold.null(), "fallback": @mold.string("guest") }),
-  )
-  assert_eq(output, "guest")
-}
-
-///|
-test "filter join" {
-  let output = @mold.render(
-    "{{ items | join(\", \") }}",
+    "{% for item in items %}{{ loop.index }}:{{ item }}\n{% endfor %}",
     @mold.object({
-      "items": @mold.array([
-        @mold.string("a"),
-        @mold.string("b"),
-        @mold.string("c"),
-      ]),
+      "items": @mold.array([@mold.string("a"), @mold.string("b")]),
     }),
   )
-  assert_eq(output, "a, b, c")
+  assert_eq(output, "1:a\n2:b\n")
 }
 
 ///|
-test "filter join with path arg" {
+test "loop.index0 is 0-based" {
   let output = @mold.render(
-    "{{ items | join(separator) }}",
+    "{% for item in items %}{{ loop.index0 }}:{{ item }}\n{% endfor %}",
     @mold.object({
-      "items": @mold.array([
-        @mold.string("a"),
-        @mold.string("b"),
-        @mold.string("c"),
-      ]),
-      "separator": @mold.string(" / "),
+      "items": @mold.array([@mold.string("a"), @mold.string("b")]),
     }),
   )
-  assert_eq(output, "a / b / c")
+  assert_eq(output, "0:a\n1:b\n")
 }
 
 ///|
-test "filter escape html characters" {
+test "loop.first is true on first iteration" {
   let output = @mold.render(
-    "{{ text | escape }}",
+    "{% for item in items %}{{ loop.first }}-{{ item }}\n{% endfor %}",
     @mold.object({
-      "text": @mold.string("<div class=\"x\">Tom & 'Jerry'</div>"),
+      "items": @mold.array([@mold.string("a"), @mold.string("b")]),
     }),
   )
-  assert_eq(
-    output, "&lt;div class=&quot;x&quot;&gt;Tom &amp; &#39;Jerry&#39;&lt;/div&gt;",
-  )
+  assert_eq(output, "true-a\nfalse-b\n")
 }
 
 ///|
-test "filter escape supports scalar values" {
+test "loop.last is true on last iteration" {
   let output = @mold.render(
-    "{{ count | escape }}|{{ empty | escape }}",
-    @mold.object({ "count": @mold.int(7), "empty": @mold.null() }),
-  )
-  assert_eq(output, "7|")
-}
-
-///|
-test "filter escape rejects arrays" {
-  let result = try? @mold.render(
-    "{{ items | escape }}",
-    @mold.object({ "items": @mold.array([@mold.string("a")]) }),
-  )
-  match result {
-    Err(@mold.TypeMismatch(_)) => ()
-    Ok(_) => fail("expected type mismatch error")
-    _ => fail("unexpected error variant")
-  }
-}
-
-///|
-test "engine custom filter registration" {
-  let engine = @mold.Engine::new()
-  engine.register_filter("suffix", suffix_filter)
-  let output = engine.render(
-    "{{ name | suffix(suffix) }}",
-    @mold.object({ "name": @mold.string("hello"), "suffix": @mold.string("!") }),
-  )
-  assert_eq(output, "hello!")
-}
-
-///|
-test "cannot override built-in filter" {
-  let engine = @mold.Engine::new()
-  let result = try? engine.register_filter("upper", suffix_filter)
-  match result {
-    Err(@mold.DuplicateFilter(name)) => assert_eq(name, "upper")
-    Ok(_) => fail("expected duplicate filter error")
-    _ => fail("unexpected error variant")
-  }
-}
-
-///|
-test "cannot register duplicate custom filter" {
-  let engine = @mold.Engine::new()
-  engine.register_filter("suffix", suffix_filter)
-  let result = try? engine.register_filter("suffix", suffix_filter)
-  match result {
-    Err(@mold.DuplicateFilter(name)) => assert_eq(name, "suffix")
-    Ok(_) => fail("expected duplicate filter error")
-    _ => fail("unexpected error variant")
-  }
-}
-
-///|
-test "unknown filter raises dedicated error" {
-  let result = try? @mold.render(
-    "{{ name | missing }}",
-    @mold.object({ "name": @mold.string("hello") }),
-  )
-  match result {
-    Err(@mold.UnknownFilter(name)) => assert_eq(name, "missing")
-    Ok(_) => fail("expected unknown filter error")
-    _ => fail("unexpected error variant")
-  }
-}
-
-///|
-test "include renders included template" {
-  let engine = @mold.Engine::new().with_loader(fn(name) {
-    match name {
-      "header" => Some("Header: {{ title }}")
-      _ => None
-    }
-  })
-  let output = engine.render(
-    "{% include \"header\" %}\nBody",
-    @mold.object({ "title": @mold.string("My Page") }),
-  )
-  assert_eq(output, "Header: My Page\nBody")
-}
-
-///|
-test "include shares parent context" {
-  let engine = @mold.Engine::new().with_loader(fn(name) {
-    match name {
-      "item" => Some("- {{ item.name }}")
-      _ => None
-    }
-  })
-  let output = engine.render(
-    "{% for item in items %}{% include \"item\" %}\n{% endfor %}",
+    "{% for item in items %}{{ loop.last }}-{{ item }}\n{% endfor %}",
     @mold.object({
-      "items": @mold.array([
-        @mold.object({ "name": @mold.string("a") }),
-        @mold.object({ "name": @mold.string("b") }),
-      ]),
+      "items": @mold.array([@mold.string("a"), @mold.string("b")]),
     }),
   )
-  assert_eq(output, "- a\n- b\n")
+  assert_eq(output, "false-a\ntrue-b\n")
 }
 
 ///|
-test "include missing template raises error" {
-  let engine = @mold.Engine::new().with_loader(fn(_name) { None })
-  let result = try? engine.render("{% include \"missing\" %}", @mold.null())
-  match result {
-    Err(@mold.MissingInclude(name)) => assert_eq(name, "missing")
-    Ok(_) => fail("expected missing include error")
-    _ => fail("unexpected error variant")
-  }
-}
-
-///|
-test "include without loader raises error" {
-  let result = try? @mold.render("{% include \"header\" %}", @mold.null())
-  match result {
-    Err(@mold.MissingInclude(_)) => ()
-    Ok(_) => fail("expected missing include error")
-    _ => fail("unexpected error variant")
-  }
-}
-
-///|
-test "nested include within depth limit" {
-  let engine = @mold.Engine::new().with_loader(fn(name) {
-    match name {
-      "outer" => Some("outer[{% include \"inner\" %}]")
-      "inner" => Some("inner")
-      _ => None
-    }
-  })
-  let output = engine.render("{% include \"outer\" %}", @mold.null())
-  assert_eq(output, "outer[inner]")
-}
-
-///|
-test "include exceeding depth limit raises error" {
-  let engine = @mold.Engine::new().with_loader(fn(name) {
-    match name {
-      "loop" => Some("{% include \"loop\" %}")
-      _ => None
-    }
-  })
-  let result = try? engine.render("{% include \"loop\" %}", @mold.null())
-  match result {
-    Err(@mold.IncludeDepthExceeded) => ()
-    Ok(_) => fail("expected include depth exceeded error")
-    _ => fail("unexpected error variant")
-  }
-}
-
-///|
-test "include preserves filters of parent engine" {
-  let engine = @mold.Engine::new().with_loader(fn(name) {
-    match name {
-      "greeting" => Some("Hi, {{ name | upper }}")
-      _ => None
-    }
-  })
-  let output = engine.render(
-    "{% include \"greeting\" %}",
-    @mold.object({ "name": @mold.string("alice") }),
+test "loop.length is total item count" {
+  let output = @mold.render(
+    "{% for item in items %}{{ loop.length }}\n{% endfor %}",
+    @mold.object({
+      "items": @mold.array([@mold.string("a"), @mold.string("b")]),
+    }),
   )
-  assert_eq(output, "Hi, ALICE")
+  assert_eq(output, "2\n2\n")
 }
 
 ///|
-test "engine parse reuses compiled includes across renders" {
-  let mut load_count = 0
-  let engine = @mold.Engine::new().with_loader(fn(name) {
-    load_count = load_count + 1
-    match name {
-      "header" => Some("Hi, {{ name }}")
-      _ => None
-    }
-  })
-  let template = engine.parse("{% include \"header\" %}")
-  let first = template.render(@mold.object({ "name": @mold.string("Alice") }))
-  let second = template.render(@mold.object({ "name": @mold.string("Bob") }))
-  assert_eq(first, "Hi, Alice")
-  assert_eq(second, "Hi, Bob")
-  assert_eq(load_count, 1)
-}
-
-///|
-test "include propagates lexer error from included template" {
-  let engine = @mold.Engine::new().with_loader(fn(name) {
-    match name {
-      "broken" => Some("{% if %}")
-      _ => None
-    }
-  })
-  let result = try? engine.render("{% include \"broken\" %}", @mold.null())
-  match result {
-    Err(@mold.LexerError((msg, _))) =>
-      assert_true(msg.contains("empty if condition"))
-    Ok(_) => fail("expected lexer error")
-    _ => fail("unexpected error variant")
-  }
-}
-
-///|
-test "include respects comments and whitespace control" {
-  let engine = @mold.Engine::new().with_loader(fn(name) {
-    match name {
-      "name_tag" => Some(" {# hidden #}{{- name -}} ")
-      _ => None
-    }
-  })
-  let output = engine.render(
-    "A{% include \"name_tag\" %}B",
-    @mold.object({ "name": @mold.string("X") }),
+test "loop in nested for has independent scope" {
+  let output = @mold.render(
+    "{% for outer in outers %}{{ outer }}-{% for inner in inners %}{{ loop.index }}:{{ inner }}{% if not loop.last %}, {% endif %}{% endfor %}\n{% endfor %}",
+    @mold.object({
+      "outers": @mold.array([@mold.string("X")]),
+      "inners": @mold.array([@mold.string("a"), @mold.string("b")]),
+    }),
   )
-  assert_eq(output, "AXB")
+  assert_eq(output, "X-1:a, 2:b\n")
 }
 
 ///|

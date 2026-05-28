@@ -61,6 +61,7 @@ fn apply_filter(
     "join" => filter_join(peeled, args)
     "escape" => filter_escape(peeled, args)
     "safe" => filter_safe(value, args)
+    "length" => filter_length(peeled, args)
     _ => {
       for entry in filters {
         if entry.name == name {
@@ -90,6 +91,7 @@ fn is_builtin_filter_name(name : String) -> Bool {
     "join" => true
     "escape" => true
     "safe" => true
+    "length" => true
     _ => false
   }
 }
@@ -189,6 +191,19 @@ fn escape_html(text : String) -> String {
     }
   } nobreak {
     buf.to_string()
+  }
+}
+
+///|
+fn filter_length(value : Value, _args : Array[Value]) -> Value raise MoldError {
+  match value {
+    Array(items) => Int(items.length())
+    String(s) => Int(s.length())
+    Null => Int(0)
+    _ =>
+      raise TypeMismatch(
+        ("length requires array, string, or null", "array|string|null"),
+      )
   }
 }
 

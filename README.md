@@ -66,6 +66,7 @@ These three workflows map directly to the overall structure of `mold`: top-level
   - [`docs/recipes/report-generation.md`](docs/recipes/report-generation.md)
   - [`docs/recipes/email-template.md`](docs/recipes/email-template.md)
   - [`docs/recipes/json-input.md`](docs/recipes/json-input.md)
+  - [`docs/recipes/site-generation.md`](docs/recipes/site-generation.md)
 
 ## 示例 / Examples
 
@@ -90,6 +91,9 @@ These three workflows map directly to the overall structure of `mold`: top-level
 - `src/examples/from_json/`
   - `from_json(...)` 把 JSON 转成模板上下文
   - Convert JSON into template context with `from_json(...)`
+- `src/examples/site/`
+  - 静态网站批量渲染
+  - Static site batch rendering
 
 运行示例 / Run an example:
 
@@ -169,6 +173,22 @@ pub fn Engine::render(self : Engine, source : String, ctx : Value) -> String rai
 - 不支持宏系统 / no macro system
 - 不支持异步模板 / no async templates
 - 不支持自动模板目录扫描 / no automatic template discovery
+
+## 在线体验 / Playground
+
+[MoldLive](https://mold-live.run) 是一个在线模板游乐场，mold 编译为 WASM 在浏览器中直接运行：
+
+- 三栏编辑器（模板 / JSON 数据 / 实时输出）
+- 4 个内置示例（Hello / Email / SVG Card / Offline Report）
+- mold 语法高亮
+- 零后端，模板不离开你的浏览器
+
+[MoldLive](https://mold-live.run) is an online playground where mold runs as WASM directly in your browser:
+
+- Three-panel editor (template / JSON data / live output)
+- 4 built-in examples
+- mold syntax highlighting
+- Zero backend — templates never leave your browser
 
 ## 仓库链接 / Repository Links
 
