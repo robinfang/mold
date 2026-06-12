@@ -1,0 +1,14 @@
+predicate scope_hit_resolves(
+  local_bindings : Bindings,
+  key : Int,
+  result : ResolveResult,
+) {
+  match lookup(local_bindings, key) {
+    Hit(value) =>
+      match result {
+        Resolved(resolved) => resolved == value
+        Missing => false
+      }
+    Miss => true
+  }
+}

@@ -46,54 +46,53 @@ test "render nested interpolation" {
 
 ///|
 test "missing variable raises error" {
-  let result = try? @mold.render("Hello, {{ user.name }}!", @mold.object({}))
-  match result {
-    Err(@mold.MissingVariable(msg)) =>
-      assert_true(msg.contains("missing variable"))
-    Ok(_) => fail("expected missing variable error")
+  try @mold.render("Hello, {{ user.name }}!", @mold.object({})) catch {
+    @mold.MissingVariable(msg) => assert_true(msg.contains("missing variable"))
     _ => fail("unexpected error variant")
+  } noraise {
+    _ => fail("expected missing variable error")
   }
 }
 
 ///|
 test "empty interpolation raises error" {
-  let result = try? @mold.render("Hello, {{   }}!", @mold.null())
-  match result {
-    Err(@mold.LexerError((msg, span))) => {
+  try @mold.render("Hello, {{   }}!", @mold.null()) catch {
+    @mold.LexerError((msg, span)) => {
       assert_true(msg.contains("empty interpolation"))
       assert_eq(span.line, 1)
       assert_eq(span.column, 8)
     }
-    Ok(_) => fail("expected empty interpolation error")
     _ => fail("unexpected error variant")
+  } noraise {
+    _ => fail("expected empty interpolation error")
   }
 }
 
 ///|
 test "unclosed interpolation raises error" {
-  let result = try? @mold.render("Hello\n{{ name!", @mold.null())
-  match result {
-    Err(@mold.LexerError((msg, span))) => {
+  try @mold.render("Hello\n{{ name!", @mold.null()) catch {
+    @mold.LexerError((msg, span)) => {
       assert_true(msg.contains("unclosed interpolation"))
       assert_eq(span.line, 2)
       assert_eq(span.column, 1)
     }
-    Ok(_) => fail("expected unclosed interpolation error")
     _ => fail("unexpected error variant")
+  } noraise {
+    _ => fail("expected unclosed interpolation error")
   }
 }
 
 ///|
 test "unexpected else carries parser span" {
-  let result = try? @mold.render("{% else %}", @mold.null())
-  match result {
-    Err(@mold.ParserError((msg, span))) => {
+  try @mold.render("{% else %}", @mold.null()) catch {
+    @mold.ParserError((msg, span)) => {
       assert_true(msg.contains("unexpected else"))
       assert_eq(span.line, 1)
       assert_eq(span.column, 1)
     }
-    Ok(_) => fail("expected unexpected else error")
     _ => fail("unexpected error variant")
+  } noraise {
+    _ => fail("expected unexpected else error")
   }
 }
 
@@ -415,15 +414,29 @@ test "nested for loops keep outer scope values" {
 }
 
 ///|
-test "for non-array raises error" {
-  let result = try? @mold.render(
-    "{% for item in items %}{{ item }}{% endfor %}",
-    @mold.object({ "items": @mold.string("not-an-array") }),
+test "for loop scope shadows root context key" {
+  let output = @mold.render(
+    "{% for item in items %}{{ item.name }}{% endfor %}",
+    @mold.object({
+      "item": @mold.object({ "name": @mold.string("root") }),
+      "items": @mold.array([@mold.object({ "name": @mold.string("scope") })]),
+    }),
   )
-  match result {
-    Err(@mold.TypeMismatch(_)) => ()
-    Ok(_) => fail("expected type mismatch error")
+  assert_eq(output, "scope")
+}
+
+///|
+test "for non-array raises error" {
+  try
+    @mold.render(
+      "{% for item in items %}{{ item }}{% endfor %}",
+      @mold.object({ "items": @mold.string("not-an-array") }),
+    )
+  catch {
+    @mold.TypeMismatch(_) => ()
     _ => fail("unexpected error variant")
+  } noraise {
+    _ => fail("expected type mismatch error")
   }
 }
 

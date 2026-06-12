@@ -63,6 +63,7 @@ These three workflows map directly to the overall structure of `mold`: top-level
 - HTML 安全 / HTML safety: [`docs/html-safety.md`](docs/html-safety.md)
 - 错误排查 / Errors: [`docs/errors.md`](docs/errors.md)
 - WASM 导出 / WASM export: [`docs/wasm-export.md`](docs/wasm-export.md)
+- 形式化验证 / Proof sandbox: [`docs/scope-proof.md`](docs/scope-proof.md)
 - Recipes / Recipes:
   - [`docs/recipes/report-generation.md`](docs/recipes/report-generation.md)
   - [`docs/recipes/email-template.md`](docs/recipes/email-template.md)

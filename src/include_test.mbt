@@ -36,21 +36,21 @@ test "include shares parent context" {
 ///|
 test "include missing template raises error" {
   let engine = @mold.Engine::new().with_loader(fn(_name) { None })
-  let result = try? engine.render("{% include \"missing\" %}", @mold.null())
-  match result {
-    Err(@mold.MissingInclude(name)) => assert_eq(name, "missing")
-    Ok(_) => fail("expected missing include error")
+  try engine.render("{% include \"missing\" %}", @mold.null()) catch {
+    @mold.MissingInclude(name) => assert_eq(name, "missing")
     _ => fail("unexpected error variant")
+  } noraise {
+    _ => fail("expected missing include error")
   }
 }
 
 ///|
 test "include without loader raises error" {
-  let result = try? @mold.render("{% include \"header\" %}", @mold.null())
-  match result {
-    Err(@mold.MissingInclude(_)) => ()
-    Ok(_) => fail("expected missing include error")
+  try @mold.render("{% include \"header\" %}", @mold.null()) catch {
+    @mold.MissingInclude(_) => ()
     _ => fail("unexpected error variant")
+  } noraise {
+    _ => fail("expected missing include error")
   }
 }
 
@@ -75,11 +75,11 @@ test "include exceeding depth limit raises error" {
       _ => None
     }
   })
-  let result = try? engine.render("{% include \"loop\" %}", @mold.null())
-  match result {
-    Err(@mold.IncludeDepthExceeded) => ()
-    Ok(_) => fail("expected include depth exceeded error")
+  try engine.render("{% include \"loop\" %}", @mold.null()) catch {
+    @mold.IncludeDepthExceeded => ()
     _ => fail("unexpected error variant")
+  } noraise {
+    _ => fail("expected include depth exceeded error")
   }
 }
 
@@ -124,12 +124,12 @@ test "include propagates lexer error from included template" {
       _ => None
     }
   })
-  let result = try? engine.render("{% include \"broken\" %}", @mold.null())
-  match result {
-    Err(@mold.LexerError((msg, _))) =>
+  try engine.render("{% include \"broken\" %}", @mold.null()) catch {
+    @mold.LexerError((msg, _)) =>
       assert_true(msg.contains("empty if condition"))
-    Ok(_) => fail("expected lexer error")
     _ => fail("unexpected error variant")
+  } noraise {
+    _ => fail("expected lexer error")
   }
 }
 

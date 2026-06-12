@@ -107,14 +107,16 @@ test "filter escape supports scalar values" {
 
 ///|
 test "filter escape rejects arrays" {
-  let result = try? @mold.render(
-    "{{ items | escape }}",
-    @mold.object({ "items": @mold.array([@mold.string("a")]) }),
-  )
-  match result {
-    Err(@mold.TypeMismatch(_)) => ()
-    Ok(_) => fail("expected type mismatch error")
+  try
+    @mold.render(
+      "{{ items | escape }}",
+      @mold.object({ "items": @mold.array([@mold.string("a")]) }),
+    )
+  catch {
+    @mold.TypeMismatch(_) => ()
     _ => fail("unexpected error variant")
+  } noraise {
+    _ => fail("expected type mismatch error")
   }
 }
 
@@ -132,11 +134,11 @@ test "engine custom filter registration" {
 ///|
 test "cannot override built-in filter" {
   let engine = @mold.Engine::new()
-  let result = try? engine.register_filter("upper", suffix_filter)
-  match result {
-    Err(@mold.DuplicateFilter(name)) => assert_eq(name, "upper")
-    Ok(_) => fail("expected duplicate filter error")
+  try engine.register_filter("upper", suffix_filter) catch {
+    @mold.DuplicateFilter(name) => assert_eq(name, "upper")
     _ => fail("unexpected error variant")
+  } noraise {
+    _ => fail("expected duplicate filter error")
   }
 }
 
@@ -144,24 +146,26 @@ test "cannot override built-in filter" {
 test "cannot register duplicate custom filter" {
   let engine = @mold.Engine::new()
   engine.register_filter("suffix", suffix_filter)
-  let result = try? engine.register_filter("suffix", suffix_filter)
-  match result {
-    Err(@mold.DuplicateFilter(name)) => assert_eq(name, "suffix")
-    Ok(_) => fail("expected duplicate filter error")
+  try engine.register_filter("suffix", suffix_filter) catch {
+    @mold.DuplicateFilter(name) => assert_eq(name, "suffix")
     _ => fail("unexpected error variant")
+  } noraise {
+    _ => fail("expected duplicate filter error")
   }
 }
 
 ///|
 test "unknown filter raises dedicated error" {
-  let result = try? @mold.render(
-    "{{ name | missing }}",
-    @mold.object({ "name": @mold.string("hello") }),
-  )
-  match result {
-    Err(@mold.UnknownFilter(name)) => assert_eq(name, "missing")
-    Ok(_) => fail("expected unknown filter error")
+  try
+    @mold.render(
+      "{{ name | missing }}",
+      @mold.object({ "name": @mold.string("hello") }),
+    )
+  catch {
+    @mold.UnknownFilter(name) => assert_eq(name, "missing")
     _ => fail("unexpected error variant")
+  } noraise {
+    _ => fail("expected unknown filter error")
   }
 }
 
@@ -209,13 +213,15 @@ test "filter length on null" {
 
 ///|
 test "filter length on int raises type mismatch" {
-  let result = try? @mold.render(
-    "{{ count | length }}",
-    @mold.object({ "count": @mold.int(42) }),
-  )
-  match result {
-    Err(@mold.TypeMismatch(_)) => ()
-    Ok(_) => fail("expected type mismatch error")
+  try
+    @mold.render(
+      "{{ count | length }}",
+      @mold.object({ "count": @mold.int(42) }),
+    )
+  catch {
+    @mold.TypeMismatch(_) => ()
     _ => fail("unexpected error variant")
+  } noraise {
+    _ => fail("expected type mismatch error")
   }
 }
