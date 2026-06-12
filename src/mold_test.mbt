@@ -15,6 +15,17 @@ fn suffix_filter(value : @mold.Value, args : Array[@mold.Value]) -> @mold.Value 
 }
 
 ///|
+fn assert_string_array_eq(
+  actual : Array[String],
+  expected : Array[String],
+) -> Unit raise {
+  assert_eq(actual.length(), expected.length())
+  for i in 0..<expected.length() {
+    assert_eq(actual[i], expected[i])
+  }
+}
+
+///|
 test "render plain text" {
   let output = @mold.render("hello, mold", @mold.null())
   assert_eq(output, "hello, mold")
@@ -630,6 +641,93 @@ test "Template.ast returns parsed AST" {
   let template = @mold.Template::parse("hello {{ name }}")
   let nodes = template.ast()
   assert_eq(nodes.length(), 3)
+}
+
+///|
+test "inspect collects interpolation variable paths" {
+  let info = @mold.inspect("Hello, {{ user.name }} from {{ org }}")
+  assert_string_array_eq(info.variables, ["user.name", "org"])
+  assert_string_array_eq(info.filters, [])
+  assert_string_array_eq(info.includes, [])
+}
+
+///|
+test "inspect collects variables from if branches" {
+  let info = @mold.inspect(
+    "{% if user.active and account.ready %}{{ user.name }}{% else %}{{ fallback }}{% endif %}",
+  )
+  assert_string_array_eq(info.variables, [
+    "user.active", "account.ready", "user.name", "fallback",
+  ])
+}
+
+///|
+test "inspect ignores for loop locals and loop metadata" {
+  let info = @mold.inspect(
+    "{% for item in items %}{{ loop.index }}:{{ item.name }} {{ owner }}{% endfor %}",
+  )
+  assert_string_array_eq(info.variables, ["items", "owner"])
+}
+
+///|
+test "inspect collects filters and filter argument variables" {
+  let info = @mold.inspect(
+    "{{ name | default(fallback) | upper }} {{ items | join(separator) }}",
+  )
+  assert_string_array_eq(info.variables, [
+    "name", "fallback", "items", "separator",
+  ])
+  assert_string_array_eq(info.filters, ["default", "upper", "join"])
+}
+
+///|
+test "inspect collects include names" {
+  let info = @mold.inspect(
+    "{% include \"header\" %}Body{% include \"footer\" %}",
+  )
+  assert_string_array_eq(info.includes, ["header", "footer"])
+}
+
+///|
+test "inspect deduplicates in first-seen order" {
+  let info = @mold.inspect(
+    "{{ user.name | trim }}{{ user.name | trim }}{% include \"card\" %}{% include \"card\" %}",
+  )
+  assert_string_array_eq(info.variables, ["user.name"])
+  assert_string_array_eq(info.filters, ["trim"])
+  assert_string_array_eq(info.includes, ["card"])
+}
+
+///|
+test "Template.inspect uses parsed template" {
+  let template = @mold.Template::parse("{{ title }}{% include \"body\" %}")
+  let info = template.inspect()
+  assert_string_array_eq(info.variables, ["title"])
+  assert_string_array_eq(info.includes, ["body"])
+}
+
+///|
+test "Engine.inspect uses engine parser behavior" {
+  let engine = @mold.Engine::new().with_loader(fn(name) {
+    match name {
+      "child" => Some("{{ child_value }}")
+      _ => None
+    }
+  })
+  let info = engine.inspect("{% include \"child\" %}{{ root_value }}")
+  assert_string_array_eq(info.variables, ["root_value"])
+  assert_string_array_eq(info.includes, ["child"])
+}
+
+///|
+test "Engine.inspect raises parser errors" {
+  let engine = @mold.Engine::new()
+  try engine.inspect("{% else %}") catch {
+    @mold.ParserError((msg, _)) => assert_true(msg.contains("unexpected else"))
+    _ => fail("unexpected error variant")
+  } noraise {
+    _ => fail("expected parser error")
+  }
 }
 
 ///|

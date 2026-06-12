@@ -24,6 +24,7 @@
 - HTML 输出下的 `with_autoescape(true)`
 - `register_filter(...)` 注册自定义 filter
 - 带引擎配置的 parse once, render many
+- `inspect(...)` 分析模板依赖
 
 ## 2. `Engine::new()`
 
@@ -69,6 +70,7 @@ pub type Loader = (String) -> String?
 对应示例：
 
 - [`src/examples/include_loader/`](../src/examples/include_loader/)
+- [`recipes/include-loader.md`](recipes/include-loader.md)
 
 运行：
 
@@ -186,9 +188,20 @@ let second = tpl.render(@mold.object({ "title": @mold.string("B") }))
 
 那直接用 `@mold.render(...)` 或 `Template::parse(...).render(...)` 会更简单。
 
-## 8. 对应文档与示例
+## 8. `Engine::inspect(...)`
+
+如果你需要在渲染前分析模板依赖，可以用：
+
+```moonbit
+let info = engine.inspect("{% include \"header\" %}{{ user.name | upper }}")
+```
+
+它会返回模板用到的变量路径、filter 名和 include 名。更完整说明见：[`inspection.md`](inspection.md)。
+
+## 9. 对应文档与示例
 
 - [`getting-started.md`](getting-started.md)
+- [`inspection.md`](inspection.md)
 - [`html-safety.md`](html-safety.md)
 - [`errors.md`](errors.md)
 - [`src/examples/include_loader/`](../src/examples/include_loader/)

@@ -99,7 +99,7 @@
 
 - **语法少一点，但每个语法都稳定**
 
-## 4. 当前实现状态（截至 2026-05-27）
+## 4. 当前实现状态（截至 2026-06-12）
 
 ### 已完成
 
@@ -108,7 +108,7 @@
 - 循环 `{% for item in items %}...{% endfor %}`
 - filter 链与 filter 参数（字符串、整数、路径变量）
 - 自定义 filter 注册（`Engine::register_filter`），不可覆盖内置 filter
-- 内置 filter：`upper`、`lower`、`trim`、`default`、`join`、`escape`
+- 内置 filter：`upper`、`lower`、`trim`、`default`、`join`、`escape`、`length`、`safe`
 - 比较表达式：`== != < <= > >=`
 - 布尔表达式：`and or not`，支持括号分组
 - 模板包含：`{% include "name" %}` + `Loader` 机制
@@ -117,16 +117,17 @@
 - Engine 级 autoescape 策略 + `| safe` filter
 - `Template::ast()` 调试接口
 - `from_json` / `from_map` 上下文转换辅助
+- WASM 导出 `mold_render(...)` 与 Node smoke 验证脚本
 - 结构化错误定位（`SourceSpan`：start/end/line/column）
 - 错误类型：`LexerError`、`ParserError`、`MissingVariable`、`UnknownFilter`、`DuplicateFilter`、`MissingInclude`、`IncludeDepthExceeded`、`TypeMismatch`
 - `Template::parse` / `Template::render` 分层（parse once, render many）
 - `Engine` 层扩展点
-- 42 个测试 → 已增至 66 个 + benchmark
-- 3 个示例程序（hello / report / email）
+- 96 个测试 + benchmark
+- 8 个示例程序（hello / report / email / include_loader / html_safe / custom_filter / from_json / site）
 
 ### 待实现
 
-- 文件系统 loader
+- 更多宿主环境 loader 接入示例
 - 模板编译缓存
 - missing variable 策略可配置
 

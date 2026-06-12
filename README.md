@@ -60,6 +60,7 @@ These three workflows map directly to the overall structure of `mold`: top-level
 - 快速开始 / Getting started: [`docs/getting-started.md`](docs/getting-started.md)
 - 模板语法 / Template syntax: [`docs/template-syntax.md`](docs/template-syntax.md)
 - Engine 指南 / Engine guide: [`docs/engine-guide.md`](docs/engine-guide.md)
+- 模板诊断 / Inspection: [`docs/inspection.md`](docs/inspection.md)
 - HTML 安全 / HTML safety: [`docs/html-safety.md`](docs/html-safety.md)
 - 错误排查 / Errors: [`docs/errors.md`](docs/errors.md)
 - WASM 导出 / WASM export: [`docs/wasm-export.md`](docs/wasm-export.md)
@@ -67,6 +68,7 @@ These three workflows map directly to the overall structure of `mold`: top-level
 - Recipes / Recipes:
   - [`docs/recipes/report-generation.md`](docs/recipes/report-generation.md)
   - [`docs/recipes/email-template.md`](docs/recipes/email-template.md)
+  - [`docs/recipes/include-loader.md`](docs/recipes/include-loader.md)
   - [`docs/recipes/json-input.md`](docs/recipes/json-input.md)
   - [`docs/recipes/site-generation.md`](docs/recipes/site-generation.md)
 
@@ -131,6 +133,7 @@ moon run src/examples/from_json
 - `{# ... #}` 模板注释 / template comments
 - Engine 级 autoescape / engine-level autoescape
 - `Template::ast()` 调试访问 / AST debug accessor
+- `Template::inspect()` / `inspect(...)` 模板依赖诊断 / template dependency inspection
 - `from_json` / `from_map` 上下文转换 / context conversion helpers
 - 结构化错误类型与源码位置 / structured errors with source spans
 
@@ -161,6 +164,7 @@ pub fn Template::parse(source : String) -> Template raise MoldError
 pub fn Template::render(self : Template, ctx : Value) -> String raise MoldError
 pub fn Template::source(self : Template) -> String
 pub fn Template::ast(self : Template) -> Array[Node]
+pub fn Template::inspect(self : Template) -> TemplateInspection
 
 pub fn Engine::new() -> Engine
 pub fn Engine::with_loader(self : Engine, loader : Loader) -> Engine
@@ -168,6 +172,9 @@ pub fn Engine::with_autoescape(self : Engine, autoescape : Bool) -> Engine
 pub fn Engine::register_filter(self : Engine, name : String, filter : Filter) -> Unit raise MoldError
 pub fn Engine::parse(self : Engine, source : String) -> Template raise MoldError
 pub fn Engine::render(self : Engine, source : String, ctx : Value) -> String raise MoldError
+pub fn Engine::inspect(self : Engine, source : String) -> TemplateInspection raise MoldError
+
+pub fn inspect(source : String) -> TemplateInspection raise MoldError
 ```
 
 ## 当前限制 / Current Limits
@@ -200,9 +207,9 @@ pub fn Engine::render(self : Engine, source : String, ctx : Value) -> String rai
 
 ## 发布状态 / Release Status
 
-`mold` 已发布到 `mooncakes.io`，当前版本为 `0.2.0`。
+`mold` 已发布到 `mooncakes.io`，当前版本为 `0.3.0`。
 
-`mold` is now published on `mooncakes.io`, and the current version is `0.2.0`.
+`mold` is now published on `mooncakes.io`, and the current version is `0.3.0`.
 
 ## 开源协议 / License
 

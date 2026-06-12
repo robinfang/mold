@@ -37,6 +37,8 @@
   - 插值、条件、循环、filter、include、空白控制、注释
 - [Engine 使用指南](engine-guide.md)
   - `with_loader`、`with_autoescape`、`register_filter`、`Engine::parse(...)`
+- [模板诊断 / Inspection](inspection.md)
+  - 不渲染模板，收集变量路径、filter 名和 include 名
 - [HTML 安全](html-safety.md)
   - 默认行为、autoescape、`| safe`、推荐实践
 - [错误排查](errors.md)
@@ -48,6 +50,7 @@
 - Recipes
   - [报告生成](recipes/report-generation.md)
   - [邮件模板](recipes/email-template.md)
+  - [include 与 Loader](recipes/include-loader.md)
   - [JSON 输入](recipes/json-input.md)
   - [静态网站](recipes/site-generation.md)
 
@@ -88,12 +91,12 @@
 - 异步模板
 - 自动模板目录扫描
 
-## 近期会继续补充的文档
+## 后续可继续补充的文档
 
-下一步会继续补这些内容，仍保持按主题拆分：
+后续如果继续扩展文档，仍建议保持按主题拆分：
 
-- 更多与文档一一对应的 examples
+- 更多与 recipes 一一对应的 examples
 - 更细的 API 边界说明
-- 文件系统 loader 接入示例
+- 更多宿主环境接入示例，例如 CLI、WASM 和构建工具
 
 `Engine`、HTML 安全、错误排查和 recipes 这几篇已经补齐，当前文档体系覆盖了从快速上手到进阶使用的主要路径。

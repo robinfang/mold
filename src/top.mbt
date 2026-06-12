@@ -138,6 +138,11 @@ pub fn Template::ast(self : Template) -> Array[Node] noraise {
 }
 
 ///|
+pub fn Template::inspect(self : Template) -> TemplateInspection noraise {
+  inspect_nodes(self.ast)
+}
+
+///|
 pub fn Engine::new() -> Engine noraise {
   Engine::{
     filters: default_filter_registry(),
@@ -195,6 +200,19 @@ pub fn Engine::render(
 }
 
 ///|
+pub fn Engine::inspect(
+  self : Engine,
+  source : String,
+) -> TemplateInspection raise MoldError {
+  self.parse(source).inspect()
+}
+
+///|
 pub fn render(source : String, ctx : Value) -> String raise MoldError {
   Engine::new().render(source, ctx)
+}
+
+///|
+pub fn inspect(source : String) -> TemplateInspection raise MoldError {
+  Template::parse(source).inspect()
 }
