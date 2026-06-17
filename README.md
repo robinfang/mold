@@ -10,6 +10,19 @@
 
 `mold` currently focuses on a clear scope: parse templates into ASTs and render them against a unified `Value` model. It primarily targets text generation scenarios such as reports, email templates, config files, and document generation, while also supporting HTML output through explicit configuration.
 
+## 在线体验 / Live Demo
+
+[MoldLive](https://mold-live.run) 是一个在线模板游乐场，`mold` 编译为 WASM 在浏览器中直接运行。你可以在三栏编辑器里修改模板和 JSON 数据，并实时查看输出。
+
+[MoldLive](https://mold-live.run) is an online playground where `mold` runs as WASM directly in your browser. Edit the template and JSON data side by side, then see the rendered output immediately.
+
+[![MoldLive screenshot](docs/assets/mold-live.png)](https://mold-live.run)
+
+- 三栏编辑器：模板 / JSON 数据 / 实时输出
+- 4 个内置示例：Hello / Email / SVG Card / Offline Report
+- `mold` 语法高亮
+- 零后端，模板不离开你的浏览器
+
 ## 阅读框架 / Reading Guide
 
 第一次接触 `mold` 时，建议按下面顺序阅读：
@@ -183,22 +196,6 @@ pub fn inspect(source : String) -> TemplateInspection raise MoldError
 - 不支持宏系统 / no macro system
 - 不支持异步模板 / no async templates
 - 不支持自动模板目录扫描 / no automatic template discovery
-
-## 在线体验 / Playground
-
-[MoldLive](https://mold-live.run) 是一个在线模板游乐场，mold 编译为 WASM 在浏览器中直接运行：
-
-- 三栏编辑器（模板 / JSON 数据 / 实时输出）
-- 4 个内置示例（Hello / Email / SVG Card / Offline Report）
-- mold 语法高亮
-- 零后端，模板不离开你的浏览器
-
-[MoldLive](https://mold-live.run) is an online playground where mold runs as WASM directly in your browser:
-
-- Three-panel editor (template / JSON data / live output)
-- 4 built-in examples
-- mold syntax highlighting
-- Zero backend — templates never leave your browser
 
 ## 仓库链接 / Repository Links
 
