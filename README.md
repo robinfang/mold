@@ -1,5 +1,7 @@
 # mold
 
+[![CI](https://github.com/robinfang/mold/actions/workflows/ci.yml/badge.svg)](https://github.com/robinfang/mold/actions/workflows/ci.yml)
+
 `mold` 是一个面向 MoonBit 生态的轻量模板引擎。
 
 `mold` is a lightweight template engine for the MoonBit ecosystem.
