@@ -4,12 +4,6 @@
 
 `mold` is a lightweight template engine for the MoonBit ecosystem.
 
-## 总体概况 / Overview
-
-`mold` 当前聚焦在一个明确范围内：把模板稳定解析成 AST，再基于统一的 `Value` 模型完成渲染。它优先服务于报告生成、邮件模板、配置文件生成、文档模板这类文本生成场景，同时也支持通过显式配置进入 HTML 输出场景。
-
-`mold` currently focuses on a clear scope: parse templates into ASTs and render them against a unified `Value` model. It primarily targets text generation scenarios such as reports, email templates, config files, and document generation, while also supporting HTML output through explicit configuration.
-
 ## 在线体验 / Live Demo
 
 [MoldLive](https://mold-live.run) 是一个在线模板游乐场，`mold` 编译为 WASM 在浏览器中直接运行。你可以在三栏编辑器里修改模板和 JSON 数据，并实时查看输出。
@@ -23,16 +17,19 @@
 - `mold` 语法高亮
 - 零后端，模板不离开你的浏览器
 
-## 阅读框架 / Reading Guide
+## 总体概况 / Overview
 
-第一次接触 `mold` 时，建议按下面顺序阅读：
+`mold` 当前聚焦在一个明确范围内：把模板稳定解析成 AST，再基于统一的 `Value` 模型完成渲染。它优先服务于报告生成、邮件模板、配置文件生成、文档模板这类文本生成场景，同时也支持通过显式配置进入 HTML 输出场景。
 
-1. 先看本页，了解项目定位、安装方式和三种推荐使用路径。
-2. 再看 [`docs/getting-started.md`](docs/getting-started.md)，把最小示例和运行方式跑通。
-3. 需要写模板时，看 [`docs/template-syntax.md`](docs/template-syntax.md)。
-4. 需要多模板组合、HTML 输出或错误排查时，看对应进阶文档和 examples。
+`mold` currently focuses on a clear scope: parse templates into ASTs and render them against a unified `Value` model. It primarily targets text generation scenarios such as reports, email templates, config files, and document generation, while also supporting HTML output through explicit configuration.
 
-When reading `mold` for the first time, start with this page for project scope, installation, and the three recommended workflows, then move to `getting-started`, and finally to `template-syntax` when you begin writing templates.
+## 核心链路 / Core Flow
+
+下面这张图概括了 `mold` 的核心链路：模板和 JSON 数据进入解析/诊断流程，再由渲染器产出报告、邮件、配置或 HTML。
+
+The diagram below summarizes the core `mold` flow: templates and JSON data enter parsing and inspection, then rendering produces reports, emails, config files, or HTML.
+
+![mold template flow](docs/assets/mold-pipeline/01-infographic-mold-pipeline.png)
 
 ## 安装 / Installation
 
@@ -66,6 +63,17 @@ These three workflows map directly to the overall structure of `mold`: top-level
 - Use `@mold.render(...)` for small templates or one-off rendering.
 - Use `Template::parse(...).render(...)` when the same template is rendered repeatedly.
 - Use `Engine` when you need include, autoescape, or custom filters.
+
+## 阅读框架 / Reading Guide
+
+第一次接触 `mold` 时，建议按下面顺序阅读：
+
+1. 先看本页，了解项目定位、安装方式和三种推荐使用路径。
+2. 再看 [`docs/getting-started.md`](docs/getting-started.md)，把最小示例和运行方式跑通。
+3. 需要写模板时，看 [`docs/template-syntax.md`](docs/template-syntax.md)。
+4. 需要多模板组合、HTML 输出或错误排查时，看对应进阶文档和 examples。
+
+When reading `mold` for the first time, start with this page for project scope, installation, and the three recommended workflows, then move to `getting-started`, and finally to `template-syntax` when you begin writing templates.
 
 ## 文档导航 / Documentation
 
