@@ -10,13 +10,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: moonbitlang/setup-moonbit@v1
+      - name: Setup MoonBit
+        uses: hustcer/setup-moonbit@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: moon version
+        run: moon version --all
+
+      - name: moon fmt --check
+        run: moon fmt --check
 
       - name: moon check
         run: moon check
 
       - name: moon test
         run: moon test
-
-      - name: moon fmt --check
-        run: moon fmt --check
