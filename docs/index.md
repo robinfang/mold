@@ -45,6 +45,8 @@
   - 错误分类、常见触发方式、排查顺序
 - [WASM 导出](wasm-export.md)
   - 构建、配置、JS 集成、返回格式
+- [参赛说明](competition.md)
+  - 演示脚本、双端验证命令、项目亮点与当前边界
 - [形式化验证 / Proof sandbox](scope-proof.md)
   - 实验性模型验证、WSL/Why3/Z3 运行方式
 - Recipes

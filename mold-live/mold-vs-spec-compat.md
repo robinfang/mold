@@ -1,0 +1,113 @@
+# MoldLive 对接 mold 的历史兼容记录
+
+> 生成日期：2026-05-28
+> 最终更新：2026-07-03
+> 当前 mold 版本：0.3.0
+> 当前仓库形态：MoldLive 已迁入 `robinfang/mold`，位于 `mold-live/`
+
+这份文档记录 MoldLive 初期接入 `mold` WASM 时发现的问题和闭环状态，作为历史兼容记录保留。当前使用说明以根目录 `README.md`、`docs/wasm-export.md` 和 `docs/competition.md` 为准。
+
+---
+
+## 1. 初期兼容问题闭环
+
+| # | 问题 | mold 侧 | MoldLive 侧 | 状态 |
+|---|---|---|---|---|
+| 1 | `length` filter 缺失 | `src/filter.mbt` 已添加 | Mock + 真实 WASM 均通过 | ✅ |
+| 2 | `loop.index` 不支持 | `src/render.mbt` 已注入 loop 对象 | Mock + 真实 WASM 均通过 | ✅ |
+| 3 | WASM 编译目标不存在 | `src/wasm-export/` 已交付 | `mold.wasm` 已部署上线 | ✅ |
+
+---
+
+## 2. MoldLive 实施状态记录
+
+| Task | 内容 | 状态 |
+|---|---|---|
+| 1 | 项目脚手架（Vite + TS + TW + 目录结构） | ✅ |
+| 2 | Store + debounce + encode + Vitest（27 tests） | ✅ |
+| 3 | WASM Mock + Loader + mold.wasm 对接 | ✅ |
+| 4 | 4 个示例数据 | ✅ |
+| 5 | 三栏布局 + CodeMirror 6 + 暗色主题 | ✅ |
+| 6 | 渲染流水线（debounce → JSON 校验 → WASM → store） | ✅ |
+| 7 | mold 语法高亮（`{{ }}` / `{% %}` / `{# #}`） | ✅ |
+| 8 | 顶栏（Tab 切换 / Share / GitHub）+ 状态栏 | ✅ |
+| 9 | URL hash 状态同步（#example= / #t=&d=） | ✅ |
+| 10 | SVG 输出模式（innerHTML + fallback） | ✅ |
+| 11 | 移动端响应式（可折叠面板） | ✅ |
+| 12 | GitHub Pages 部署流程 | ✅ |
+| 13 | 性能验收（JS 6.5KB / CSS 4KB / Acc 96 / LCP 557ms） | ✅ |
+
+---
+
+## 3. 当前仓库与部署关系
+
+| 项目 | 值 |
+|---|---|
+| 当前参赛源码仓库 | https://github.com/robinfang/mold |
+| MoldLive 子应用 | `mold-live/` |
+| 线上地址 | https://mold-live.run |
+| WASM 同步方式 | 从根仓库执行 `moon build --target wasm-gc` 后复制到 `mold-live/public/mold.wasm` |
+| WASM 接口 | `mold_render(template: string, dataJson: string) → string`（JSON 信封） |
+| WASM 加载 | `WebAssembly.instantiate(bytes, {}, { builtins: ["js-string"], importedStringConstants: "_" })` |
+| Mock fallback | `VITE_USE_WASM=false` 或 WASM 加载失败时自动切换 |
+
+---
+
+## 4. WASM 接口契约（最终版）
+
+### JS 调用方式
+
+```js
+const { instance } = await WebAssembly.instantiate(bytes, {}, {
+  builtins: ["js-string"],
+  importedStringConstants: "_",
+});
+instance.exports._start();
+const result = instance.exports.mold_render(template, dataJson);
+```
+
+### 返回值（始终为 JSON 信封）
+
+成功：
+```json
+{"output":"Hello WASM!"}
+```
+
+失败：
+```json
+{"error":{"kind":"template","message":"unclosed interpolation tag","line":1,"column":1}}
+```
+
+- 8 种 MoldError 变体逐一映射到 `kind` + `message` + `line` + `column`
+- 通过有无 `error` 字段区分成功/失败，无歧义
+- 浏览器要求：Chrome 128+（wasm-gc + js-string-builtins）
+
+---
+
+## 5. 体积指标
+
+| 指标 | 目标 | 实际 |
+|---|---|---|
+| JS 主 bundle gzip | < 80 KB | **6.5 KB** |
+| CSS gzip | < 10 KB | **4.1 KB** |
+| WASM gzip | < 100 KB | ~55 KB |
+| CodeMirror 懒加载 chunk | — | 105 KB（按需） |
+
+---
+
+## 6. mold 源码关键位置速查
+
+| 文件 | 职责 |
+|---|---|
+| `src/token.mbt` | Token 类型定义 |
+| `src/lexer.mbt` | 词法分析（两阶段：block / interpolation） |
+| `src/ast.mbt` | AST 节点（`Node` / `Expr` 枚举） |
+| `src/parser.mbt` | 语法分析 |
+| `src/value.mbt` | 运行时值模型（`Value` 枚举 + `from_json`） |
+| `src/context.mbt` | 上下文解析 + scope 支持 |
+| `src/filter.mbt` | Filter 注册与分派（含 `length`） |
+| `src/render.mbt` | AST 渲染（含 `loop` 元变量注入） |
+| `src/error.mbt` | 错误类型 + `SourceSpan`（line / column） |
+| `src/top.mbt` | 公开 API（`render` / `Template` / `Engine`） |
+| `src/wasm-export/main.mbt` | WASM 导出层（`mold_render(template, dataJson) → String`） |
+| `src/wasm-export/moon.pkg` | WASM 构建配置 |

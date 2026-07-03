@@ -1,8 +1,13 @@
 import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const bytes = readFileSync(
-  "Z:/agentworkspace/mold/_build/wasm-gc/debug/build/wasm-export/wasm-export.wasm",
-);
+const repoRoot = dirname(fileURLToPath(import.meta.url));
+const wasmPath =
+  process.env.MOLD_WASM_PATH ??
+  resolve(repoRoot, "_build/wasm-gc/debug/build/wasm-export/wasm-export.wasm");
+
+const bytes = readFileSync(wasmPath);
 
 const { instance } = await WebAssembly.instantiate(bytes, {}, {
   builtins: ["js-string"],
@@ -26,7 +31,9 @@ function test(label, template, data) {
 // Success cases
 test("1. basic", "Hello {{ name }}!", { name: "MoonBit" });
 test("2. length", "{{ items | length }}", { items: ["a", "b", "c"] });
-test("3. loop", "{% for x in xs %}{{ loop.index }}:{{ x }}\n{% endfor %}", { xs: ["a", "b"] });
+test("3. loop", "{% for x in xs %}{{ loop.index }}:{{ x }}\n{% endfor %}", {
+  xs: ["a", "b"],
+});
 test("4. quote escape", "{{ text }}", { text: 'He said "hello"' });
 
 // Error cases with details

@@ -122,7 +122,7 @@
 - 错误类型：`LexerError`、`ParserError`、`MissingVariable`、`UnknownFilter`、`DuplicateFilter`、`MissingInclude`、`IncludeDepthExceeded`、`TypeMismatch`
 - `Template::parse` / `Template::render` 分层（parse once, render many）
 - `Engine` 层扩展点
-- 96 个测试 + benchmark
+- 105 个测试 + benchmark
 - 8 个示例程序（hello / report / email / include_loader / html_safe / custom_filter / from_json / site）
 
 ### 待实现

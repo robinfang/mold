@@ -22,6 +22,12 @@ moon build --target wasm-gc
 _build/wasm-gc/debug/build/wasm-export/wasm-export.wasm
 ```
 
+同步到本仓库内置 Demo：
+
+```text
+cp _build/wasm-gc/debug/build/wasm-export/wasm-export.wasm mold-live/public/mold.wasm
+```
+
 ## 2. moon.pkg 配置
 
 `src/wasm-export/moon.pkg` 的关键配置项：
@@ -144,21 +150,28 @@ if (result.error) {
 完整的 Node.js 验证脚本：[`mold_live_smoke.mjs`](../mold_live_smoke.mjs)
 
 ```bash
+moon build --target wasm-gc
 node mold_live_smoke.mjs
+```
+
+如果要验证其他 WASM 文件，可以设置 `MOLD_WASM_PATH`：
+
+```bash
+MOLD_WASM_PATH=mold-live/public/mold.wasm node mold_live_smoke.mjs
 ```
 
 预期输出：
 
 ```text
-basic: OK: Hello MoonBit!
-length: OK: 3
-loop: OK: 1:a
+1. basic: OK: Hello MoonBit!
+2. length: OK: 3
+3. loop: OK: 1:a
 2:b
 
-error: ERR: {"kind":"template","message":"unknown filter: bad","line":0,"column":0}
-invalid json: ERR: {"kind":"json","message":"invalid JSON","line":0,"column":0}
-missing var: ERR: {"kind":"template","message":"missing variable: missing","line":0,"column":0}
-syntax: ERR: {"kind":"template","message":"unclosed interpolation tag","line":1,"column":1}
+5. syntax err: {"kind":"template","message":"unclosed interpolation tag","line":1,"column":1}
+6. unknown filter: {"kind":"template","message":"unknown filter: bad","line":0,"column":0}
+7. missing var: {"kind":"template","message":"missing variable: missing","line":0,"column":0}
+8. invalid JSON: {"kind":"json","message":"invalid JSON","line":0,"column":0}
 ```
 
 ## 6. 相关文档
@@ -167,3 +180,4 @@ syntax: ERR: {"kind":"template","message":"unclosed interpolation tag","line":1,
 - [模板语法](template-syntax.md)
 - [Engine 使用指南](engine-guide.md)
 - [MoldLive 在线游乐场](https://mold-live.run)
+- [MoldLive 子应用](../mold-live/)

@@ -26,3 +26,14 @@ jobs:
 
       - name: moon test
         run: moon test
+
+      - name: build wasm export
+        run: moon build --target wasm-gc
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: wasm smoke test
+        run: node mold_live_smoke.mjs

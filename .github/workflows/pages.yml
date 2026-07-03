@@ -1,0 +1,70 @@
+name: Deploy MoldLive
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup MoonBit
+        uses: hustcer/setup-moonbit@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build mold WASM
+        run: moon build --target wasm-gc
+
+      - name: Sync WASM into MoldLive
+        run: cp _build/wasm-gc/debug/build/wasm-export/wasm-export.wasm mold-live/public/mold.wasm
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: mold-live/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: mold-live/pnpm-lock.yaml
+
+      - name: Install MoldLive dependencies
+        working-directory: mold-live
+        run: pnpm install --frozen-lockfile
+
+      - name: Test MoldLive
+        working-directory: mold-live
+        run: pnpm test
+
+      - name: Build MoldLive
+        working-directory: mold-live
+        run: pnpm build
+
+      - uses: actions/configure-pages@v4
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: mold-live/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment

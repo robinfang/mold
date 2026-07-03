@@ -18,6 +18,7 @@
 - 4 个内置示例：Hello / Email / SVG Card / Offline Report
 - `mold` 语法高亮
 - 零后端，模板不离开你的浏览器
+- 源码位于本仓库 [`mold-live/`](mold-live/) 子应用
 
 ## 总体概况 / Overview
 
@@ -126,10 +127,33 @@ When reading `mold` for the first time, start with this page for project scope, 
 
 ```text
 moon run src/examples/hello
+moon run src/examples/report
+moon run src/examples/email
 moon run src/examples/include_loader
 moon run src/examples/html_safe
 moon run src/examples/custom_filter
 moon run src/examples/from_json
+moon run src/examples/site
+```
+
+## MoldLive 本地运行 / Local MoldLive
+
+MoldLive 是本仓库内的浏览器 Demo 子应用。先从当前 `mold` 源码构建 WASM，再同步到前端应用：
+
+```text
+moon build --target wasm-gc
+cp _build/wasm-gc/debug/build/wasm-export/wasm-export.wasm mold-live/public/mold.wasm
+cd mold-live
+pnpm install --frozen-lockfile
+pnpm dev
+```
+
+验证生产构建：
+
+```text
+cd mold-live
+pnpm test
+pnpm build
 ```
 
 ## 能力摘要 / Feature Summary
@@ -211,6 +235,7 @@ pub fn inspect(source : String) -> TemplateInspection raise MoldError
 
 - GitHub: <https://github.com/robinfang/mold>
 - GitLink: <https://www.gitlink.org.cn/robinfang/mold>
+- MoldLive: <https://mold-live.run>
 
 ## 发布状态 / Release Status
 
