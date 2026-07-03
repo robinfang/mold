@@ -224,12 +224,16 @@ pub fn Engine::inspect(self : Engine, source : String) -> TemplateInspection rai
 pub fn inspect(source : String) -> TemplateInspection raise MoldError
 ```
 
-## 当前限制 / Current Limits
+## 设计边界 / Design Boundaries
 
-- 不支持模板继承 / no template inheritance
-- 不支持宏系统 / no macro system
-- 不支持异步模板 / no async templates
-- 不支持自动模板目录扫描 / no automatic template discovery
+`mold` intentionally keeps the template language small and predictable. It focuses on parsing, inspection, rendering, filters, includes, and WASM usage rather than becoming a full web framework.
+
+当前有意不覆盖 / intentionally out of scope for now:
+
+- 模板继承 / template inheritance
+- 宏系统 / macro system
+- 异步模板 / async templates
+- 自动模板目录扫描 / automatic template discovery
 
 ## 仓库链接 / Repository Links
 
