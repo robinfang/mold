@@ -1,11 +1,14 @@
 # MoldLive 对接 mold 的历史兼容记录
 
+> **状态：已归档。**
+> 本文档是 MoldLive 初期接入 `mold` WASM 的历史记录。当前使用说明以根目录 `README.md`、`docs/index.md` 和 `docs/wasm-export.md` 为准。
+>
 > 生成日期：2026-05-28
 > 最终更新：2026-07-03
 > 当前 mold 版本：0.3.0
 > 当前仓库形态：MoldLive 已迁入 `robinfang/mold`，位于 `mold-live/`
 
-这份文档记录 MoldLive 初期接入 `mold` WASM 时发现的问题和闭环状态，作为历史兼容记录保留。当前使用说明以根目录 `README.md`、`docs/wasm-export.md` 和 `docs/competition.md` 为准。
+这份文档记录 MoldLive 初期接入 `mold` WASM 时发现的问题和闭环状态，作为历史兼容记录保留。
 
 ---
 

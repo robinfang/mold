@@ -44,7 +44,7 @@ The deployed site uses `public/mold.wasm`. Rebuild and copy the WASM from the re
 pnpm test
 ```
 
-## TODO
+## Roadmap
 
-- [ ] Add PWA manifest for full offline mode
-- [ ] Persist last template in localStorage as fallback to URL state
+- PWA manifest and installable offline mode
+- localStorage fallback for URL state
