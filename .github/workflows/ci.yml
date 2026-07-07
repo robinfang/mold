@@ -6,40 +6,47 @@ on:
 
 jobs:
   moon:
-    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
-      - name: Setup MoonBit
-        uses: hustcer/setup-moonbit@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: install MoonBit on Unix
+        if: ${{ matrix.os != 'windows-latest' }}
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
 
-      - name: moon version
-        run: moon version --all
+      - name: install MoonBit on Windows
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: |
+          Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+          irm https://cli.moonbitlang.com/install/powershell.ps1 | iex
+          "C:\Users\runneradmin\.moon\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
 
-      - name: moon fmt
-        run: moon fmt
-
-      - name: check formatting
-        run: git diff --exit-code
+      - name: post install
+        run: |
+          moon version --all
+          moon update
 
       - name: moon check
-        run: moon check --deny-warn
-
-      - name: moon info --deny-warn
-        run: |
-          if moon info --help | grep -q -- '--deny-warn'; then
-            moon info --deny-warn
-          else
-            moon info
-          fi
-
-      - name: check generated interfaces
-        run: git diff --exit-code
+        run: moon check --target all --deny-warn
 
       - name: moon test
-        run: moon test --deny-warn
+        run: moon test --target all --deny-warn
+
+      - name: lint
+        run: |
+          moon fmt
+          git diff --exit-code
+          moon info
+          git diff --exit-code
 
       - name: build wasm export
         run: moon build --target wasm-gc
