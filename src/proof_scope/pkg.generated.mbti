@@ -1,0 +1,34 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "robinfang/mold/proof_scope"
+
+// Values
+pub fn lookup(Bindings, Int) -> LookupResult
+
+pub fn resolve_head(Bindings, Bindings, Int) -> ResolveResult
+
+pub fn sample_empty_scope() -> ResolveResult
+
+pub fn sample_scope_shadow() -> ResolveResult
+
+// Errors
+
+// Types and methods
+pub enum Bindings {
+  Empty
+  One(Int, Int)
+}
+
+pub enum LookupResult {
+  Hit(Int)
+  Miss
+}
+
+pub enum ResolveResult {
+  Resolved(Int)
+  Missing
+}
+
+// Type aliases
+
+// Traits
+

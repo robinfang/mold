@@ -12,6 +12,4 @@ keywords = [ "moonbit", "template", "templating" ]
 
 description = "A lightweight template engine for MoonBit."
 
-options(
-  source: "src",
-)
+source = "src"

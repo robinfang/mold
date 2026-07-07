@@ -1,0 +1,140 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "robinfang/mold"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn array(Array[Value]) -> Value
+
+pub fn bool(Bool) -> Value
+
+pub fn float(Double) -> Value
+
+pub fn from_json(Json) -> Value
+
+pub fn from_map(Map[String, Value]) -> Value
+
+pub fn inspect(String) -> TemplateInspection raise MoldError
+
+pub fn int(Int) -> Value
+
+pub fn null() -> Value
+
+pub fn object(Map[String, Value]) -> Value
+
+pub fn render(String, Value) -> String raise MoldError
+
+pub fn string(String) -> Value
+
+// Errors
+pub suberror MoldError {
+  LexerError((String, SourceSpan))
+  ParserError((String, SourceSpan))
+  UnknownFilter(String)
+  DuplicateFilter(String)
+  MissingVariable(String)
+  MissingInclude(String)
+  IncludeDepthExceeded
+  TypeMismatch((String, String))
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub enum BinaryOp {
+  Eq
+  Ne
+  Lt
+  Le
+  Gt
+  Ge
+  And
+  Or
+}
+
+type CompiledInclude
+
+pub struct Engine {
+  filters : Array[FilterEntry]
+  loader : ((String) -> String?)?
+  autoescape : Bool
+}
+pub fn Engine::inspect(Self, String) -> TemplateInspection raise MoldError
+pub fn Engine::new() -> Self
+pub fn Engine::parse(Self, String) -> Template raise MoldError
+pub fn Engine::register_filter(Self, String, (Value, Array[Value]) -> Value) -> Unit raise MoldError
+pub fn Engine::render(Self, String, Value) -> String raise MoldError
+pub fn Engine::with_autoescape(Self, Bool) -> Self
+pub fn Engine::with_loader(Self, (String) -> String?) -> Self
+
+pub enum Expr {
+  Path(Array[String])
+  StringLiteral(String)
+  IntLiteral(Int)
+  FloatLiteral(Double)
+  BoolLiteral(Bool)
+  NullLiteral
+  FilterCall(Expr, String, Array[Expr])
+  Binary(Expr, BinaryOp, Expr)
+  Unary(UnaryOp, Expr)
+}
+
+type FilterEntry
+
+pub enum Node {
+  Text(String)
+  Interpolation(Expr)
+  If(Expr, Array[Node], Array[Node])
+  For(String, Expr, Array[Node])
+  Include(String)
+}
+
+pub struct SourceSpan {
+  start : Int
+  end : Int
+  line : Int
+  column : Int
+} derive(Eq, @debug.Debug)
+
+pub struct Template {
+  source : String
+  ast : Array[Node]
+  filters : Array[FilterEntry]
+  loader : ((String) -> String?)?
+  includes : Array[CompiledInclude]
+  autoescape : Bool
+}
+pub fn Template::ast(Self) -> Array[Node]
+pub fn Template::inspect(Self) -> TemplateInspection
+pub fn Template::parse(String) -> Self raise MoldError
+pub fn Template::render(Self, Value) -> String raise MoldError
+pub fn Template::source(Self) -> String
+
+pub struct TemplateInspection {
+  variables : Array[String]
+  filters : Array[String]
+  includes : Array[String]
+}
+
+pub enum UnaryOp {
+  Not
+}
+
+pub enum Value {
+  Null
+  Bool(Bool)
+  Int(Int)
+  Float(Double)
+  String(String)
+  Array(Array[Value])
+  Object(Map[String, Value])
+  Safe(Value)
+}
+
+// Type aliases
+pub type Filter = (Value, Array[Value]) -> Value
+
+pub type Loader = (String) -> String?
+
+// Traits
+

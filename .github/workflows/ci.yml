@@ -18,14 +18,28 @@ jobs:
       - name: moon version
         run: moon version --all
 
-      - name: moon fmt --check
-        run: moon fmt --check
+      - name: moon fmt
+        run: moon fmt
+
+      - name: check formatting
+        run: git diff --exit-code
 
       - name: moon check
-        run: moon check
+        run: moon check --deny-warn
+
+      - name: moon info --deny-warn
+        run: |
+          if moon info --help | grep -q -- '--deny-warn'; then
+            moon info --deny-warn
+          else
+            moon info
+          fi
+
+      - name: check generated interfaces
+        run: git diff --exit-code
 
       - name: moon test
-        run: moon test
+        run: moon test --deny-warn
 
       - name: build wasm export
         run: moon build --target wasm-gc

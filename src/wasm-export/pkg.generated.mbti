@@ -1,0 +1,14 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "robinfang/mold/wasm-export"
+
+// Values
+pub fn mold_render(String, String) -> String
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+
